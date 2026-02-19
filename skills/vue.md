@@ -697,7 +697,7 @@ Before delivery:
 
 ---
 
-Version: 1.2
+Version: 1.3
 Stack: Vue 3 + Vite + lucide-vue-next
 Mode: Vanilla Vue (no UI library)
 Authority: Canonical DOM fidelity + BrandSync token compliance
