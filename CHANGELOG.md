@@ -5,6 +5,18 @@ Format: `## v[version] - [date]` with sections per skill file.
 
 ---
 
+## v0.8.0 - 2026-02-20
+
+### skills/angular-material-ui.md
+- Added Step 2b: version detection table — maps `@angular/material` version to theming API (M2 vs M3) and correct token layer (`--mdc-*` vs `--mat-*`)
+- Split Section 3 into M2 (v14–v16) and M3 (v19+) code paths with separate theme setup and override examples
+- Marked v17–v18 hybrid path as inferred/untested
+- Replaced BrandSync-specific theme filename in code examples with generic `material-theme.scss`
+- Updated validation checklist: version detection, correct API per generation, no API mixing
+- Version bumped to 1.2
+
+---
+
 ## v0.7.0 - 2026-02-19
 
 ### skills/vue.md

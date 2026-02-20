@@ -10,7 +10,7 @@ ui_philosophy: mui-structure + token-authority
 dom_policy: controlled-divergence
 ---
 
-# React + MUI BrandSync Execution Doctrine (v2.1)
+# React + MUI BrandSync Execution Doctrine (v2.2)
 
 This skill reproduces canonical BrandSync UI output using React + Material UI.
 
