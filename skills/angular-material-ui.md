@@ -1,7 +1,7 @@
 ---
 name: angular-material-ui
 description: Maps canonical BrandSync UI to Angular Material components with heavy theming. Visual fidelity over structural fidelity.
-version: 1.1
+version: 1.2
 execution_mode: adaptive
 error_policy: fail-with-alternatives
 component_strategy: material-mapping
@@ -52,6 +52,18 @@ Read `package.json` to determine:
 - Angular version (affects theming API — M2 vs M3)
 - Angular Material version (`@angular/material`)
 - Whether the project uses standalone components or NgModule
+
+## Step 2b: Detect theming generation
+
+Based on `@angular/material` version, select the correct theming API — then use **only** that API throughout. Do not mix M2 and M3 patterns.
+
+| Version | Generation | Theming API | Token layer |
+|---------|-----------|-------------|-------------|
+| v14–v16 | M2 only | `mat.define-palette()` + `mat.define-light-theme()` | `--mdc-*` |
+| v17–v18 | M2+M3 hybrid | Check `styles.scss` — look for `mat.theme()` vs `mat.define-light-theme()` to confirm which is active | Match what's already there ⚠️ |
+| v19+ | M3 default | `mat.theme()` | `--mat-*` |
+
+**If v17–v18 ⚠️ inferred, not tested:** read the existing `styles.scss` or theme SCSS file before writing any theming code — match whichever API is already in use.
 
 ## Step 3: Fetch the canonical example
 
@@ -116,12 +128,29 @@ Before coding, map each BrandSync pattern to its Material equivalent:
 Angular Material's SCSS palette requires **raw hex values** — CSS variables are not resolved at SCSS compile time and will silently produce broken output.
 
 ```scss
-// ❌ WRONG — CSS variables don't resolve in SCSS
-$brandsync-primary: mat.define-palette((
-  600: var(--color-primary-default),  // compiles to "var(...)" string — broken
-));
+// ❌ WRONG — CSS variables don't resolve in SCSS (both M2 and M3)
+600: var(--color-primary-default),  // compiles to "var(...)" string — broken
 
 // ✅ CORRECT — use raw hex values from _tokens.css primitives
+600: #0062C1,
+```
+
+## Two-Layer Strategy (applies to both M2 and M3)
+
+1. **SCSS palette / theme definition** → raw hex values (compiler needs these)
+2. **Component overrides + styles** → CSS variables (token-driven)
+
+---
+
+## M2 Theming (v14–v16)
+
+Token layer for overrides: `--mdc-*` classes (e.g. `--mdc-filled-button-container-color`)
+
+```scss
+// src/material-theme.scss  (name this whatever suits the project)
+@use '@angular/material' as mat;
+@import 'assets/_tokens.css';
+
 $brandsync-primary: mat.define-palette((
   50:  #EBF3FF,
   100: #C2D9F7,
@@ -138,25 +167,6 @@ $brandsync-primary: mat.define-palette((
     600: white,
     900: white,
   )
-));
-```
-
-## Two-Layer Strategy (same principle as React MUI)
-
-1. **SCSS palette** → raw hex values (compiler needs these)
-2. **Component overrides + styles** → CSS variables (token-driven)
-
-## Complete Theme Setup
-
-```scss
-// src/brandsync-theme.scss
-@use '@angular/material' as mat;
-@import 'assets/_tokens.css';
-
-$brandsync-primary: mat.define-palette((
-  600: #0062C1,
-  // ... full palette
-  contrast: (600: white)
 ));
 
 $brandsync-accent: mat.define-palette((
@@ -177,11 +187,56 @@ $brandsync-theme: mat.define-light-theme((
 @include mat.all-component-themes($brandsync-theme);
 ```
 
-Register in `angular.json` styles array:
+Override example (M2 token layer):
+```scss
+.mat-mdc-raised-button.mat-primary {
+  --mdc-filled-button-container-color: var(--color-primary-default);
+  --mdc-filled-button-hover-container-color: var(--color-primary-hover);
+}
+```
+
+---
+
+## M3 Theming (v19+)
+
+Token layer for overrides: `--mat-*` classes (e.g. `--mat-filled-button-background-color`)
+
+```scss
+// src/material-theme.scss  (name this whatever suits the project)
+@use '@angular/material' as mat;
+@import 'assets/_tokens.css';
+
+$brandsync-theme: mat.theme((
+  color: (
+    primary: mat.$blue-palette,   // base palette — overridden per-component via CSS vars
+    theme-type: light,
+  ),
+  typography: (
+    brand-family: 'Roboto, sans-serif',
+    plain-family: 'Roboto, sans-serif',
+  ),
+));
+
+html {
+  @include mat.theme($brandsync-theme);
+}
+```
+
+Override example (M3 token layer):
+```scss
+.mat-mdc-raised-button.mat-primary {
+  --mat-filled-button-background-color: var(--color-primary-default);
+  --mat-filled-button-hover-background-color: var(--color-primary-hover);
+}
+```
+
+---
+
+Register in `angular.json` styles array (both generations):
 ```json
 "styles": [
   "src/assets/_tokens.css",
-  "src/brandsync-theme.scss",
+  "src/material-theme.scss",
   "src/styles.scss"
 ]
 ```
@@ -476,6 +531,10 @@ Before delivery:
 
 - [ ] `_tokens.css` verified against MCP canonical — all semantic tokens present
 - [ ] `_tokens.css` imported in `src/styles.scss` and `angular.json` styles array
+- [ ] `@angular/material` version read from `package.json` — M2 or M3 theming API selected accordingly
+- [ ] M2 projects: `mat.define-palette()` + `mat.define-light-theme()` used; overrides use `--mdc-*` tokens
+- [ ] M3 projects: `mat.theme()` used; overrides use `--mat-*` tokens
+- [ ] M2/M3 APIs not mixed in the same project
 - [ ] Material theme SCSS uses raw hex values (no CSS variables in SCSS palette)
 - [ ] Component overrides use CSS variable tokens (not hardcoded values, not primitive tokens)
 - [ ] `!important` used only where Material specificity requires it — not as default
@@ -488,7 +547,7 @@ Before delivery:
 
 ---
 
-Version: 1.1
+Version: 1.2
 Mode: Material Adaptation
 Authority: Visual fidelity over structural fidelity
 Violation Policy: Accept Material DOM, enforce visual match
