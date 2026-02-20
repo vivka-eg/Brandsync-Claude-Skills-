@@ -5,6 +5,20 @@ Format: `## v[version] - [date]` with sections per skill file.
 
 ---
 
+## v0.9.0 - 2026-02-20
+
+### skills/angular-material-ui.md
+- Expanded Pre-Flight Step 2: structured detection for standalone vs NgModule, styles path from `angular.json`, and existing theme file — no longer assumes `src/styles.scss` or a clean-slate project
+- Replaced v17–v18 "inferred, not tested" warning with concrete read-first instructions: search existing styles for `mat.theme(` vs `mat.define-light-theme(` to confirm active API before writing
+- Added §5b: Standalone vs NgModule import differences — clarifies where Material module imports go in each project type, with explicit warning against adding `imports[]` to component decorators in NgModule projects
+- Added §8 Forms: `mat-form-field` + `matInput` + `mat-select` with ReactiveFormsModule, M2/M3 token layers for form field overrides (`--mdc-outlined-text-field-*` vs `--mat-form-field-*`), global styles placement rule
+- Expanded §7 Table: added sort + pagination pattern with `MatTableDataSource`, `MatSort`, `MatPaginator`, and SCSS overrides for sort headers and paginator
+- Updated Validation Checklist: grouped into Environment / Tokens / Theming / Components / Output; added checklist items for standalone detection, styles path, existing theme check, v17-v18 API confirmation, forms token layer, table sort/pagination
+- Renumbered sections: Dialog §9, Icons §10, Abandon §11, Dark Mode §12, Token Reference §13, Checklist §14
+- Version bumped to 1.3
+
+---
+
 ## v0.8.0 - 2026-02-20
 
 ### skills/angular-material-ui.md

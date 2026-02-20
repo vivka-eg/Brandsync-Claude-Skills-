@@ -1,7 +1,7 @@
 ---
 name: angular-material-ui
 description: Maps canonical BrandSync UI to Angular Material components with heavy theming. Visual fidelity over structural fidelity.
-version: 1.2
+version: 1.3
 execution_mode: adaptive
 error_policy: fail-with-alternatives
 component_strategy: material-mapping
@@ -48,10 +48,23 @@ If ANY are missing, replace `_tokens.css` with the full canonical version before
 
 ## Step 2: Check Angular environment
 
-Read `package.json` to determine:
-- Angular version (affects theming API — M2 vs M3)
-- Angular Material version (`@angular/material`)
-- Whether the project uses standalone components or NgModule
+Read `package.json` and `angular.json` to detect:
+
+**A. Angular + Material version**
+- Determines M2 vs M3 API — see Step 2b
+
+**B. Standalone vs NgModule**
+- Read any existing component file and check for `standalone: true` in the decorator
+- This affects where Material module imports go — see §5b
+
+**C. Styles file path**
+- Read `angular.json` → `projects.[name].architect.build.options.styles[]`
+- Do NOT assume `src/styles.scss` — use the actual path from `angular.json`
+- If the styles array already references a theme SCSS file, read it before writing any theming code
+
+**D. Existing theme detection**
+- If a theme SCSS file already exists: read it, detect which API is in use, and match it — do not overwrite or restructure
+- If no theme file exists: create one at a path that fits the existing project structure
 
 ## Step 2b: Detect theming generation
 
@@ -60,10 +73,15 @@ Based on `@angular/material` version, select the correct theming API — then us
 | Version | Generation | Theming API | Token layer |
 |---------|-----------|-------------|-------------|
 | v14–v16 | M2 only | `mat.define-palette()` + `mat.define-light-theme()` | `--mdc-*` |
-| v17–v18 | M2+M3 hybrid | Check `styles.scss` — look for `mat.theme()` vs `mat.define-light-theme()` to confirm which is active | Match what's already there ⚠️ |
+| v17–v18 | M2 or M3 | Read existing styles to confirm — see below | Match what's already there |
 | v19+ | M3 default | `mat.theme()` | `--mat-*` |
 
-**If v17–v18 ⚠️ inferred, not tested:** read the existing `styles.scss` or theme SCSS file before writing any theming code — match whichever API is already in use.
+**If v17–v18 detected — Read Before Writing:**
+1. Find the main styles SCSS file (from `angular.json` styles array)
+2. Search for `mat.theme(` → M3 is active
+3. Search for `mat.define-light-theme(` → M2 is active
+4. If neither is found, search for any `@include mat.` call and infer from context
+5. Match the API you find. Do not introduce the other API. If you cannot determine which is active, output a diagnostic and ask before proceeding.
 
 ## Step 3: Fetch the canonical example
 
@@ -329,6 +347,40 @@ export class DashboardComponent implements AfterViewInit {
 
 ---
 
+# 5b. Standalone vs NgModule — Import Differences
+
+Before writing any component, read one existing component to confirm which pattern the project uses.
+
+**Standalone (Angular 14+):**
+```ts
+@Component({
+  selector: 'app-example',
+  standalone: true,
+  imports: [MatButtonModule, MatTableModule, MatDialogModule],
+  ...
+})
+```
+
+**NgModule-based:**
+```ts
+// In the feature module or SharedModule — NOT in the component decorator
+@NgModule({
+  imports: [MatButtonModule, MatTableModule, MatDialogModule],
+  ...
+})
+export class FeatureModule {}
+
+// Component has no imports array
+@Component({
+  selector: 'app-example',
+  ...
+})
+```
+
+Do NOT add an `imports` array to a component decorator in an NgModule-based project — Angular will throw a compile error.
+
+---
+
 # 6. Template Translation
 
 **Canonical (vanilla):**
@@ -397,9 +449,116 @@ Tables require the most adaptation. Material's `mat-table` is CDK-based and stru
 }
 ```
 
+## Table with Sorting and Pagination
+
+If the canonical includes sortable columns or a paginator, use `MatTableDataSource` with `MatSort` and `MatPaginator`.
+
+Add to imports: `MatSortModule`, `MatPaginatorModule`
+
+```ts
+import { MatTableDataSource } from '@angular/material/table';
+import { MatSort } from '@angular/material/sort';
+import { MatPaginator } from '@angular/material/paginator';
+
+dataSource = new MatTableDataSource(this.rows);
+@ViewChild(MatSort) sort!: MatSort;
+@ViewChild(MatPaginator) paginator!: MatPaginator;
+
+ngAfterViewInit() {
+  this.dataSource.sort = this.sort;
+  this.dataSource.paginator = this.paginator;
+}
+```
+
+```html
+<mat-table [dataSource]="dataSource" matSort class="brandsync-table">
+  <ng-container matColumnDef="name">
+    <mat-header-cell *matHeaderCellDef mat-sort-header>Name</mat-header-cell>
+    <mat-cell *matCellDef="let row">{{ row.name }}</mat-cell>
+  </ng-container>
+
+  <mat-header-row *matHeaderRowDef="columns"></mat-header-row>
+  <mat-row *matRowDef="let row; columns: columns"></mat-row>
+</mat-table>
+<mat-paginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons />
+```
+
+```scss
+// In global styles.scss — paginator renders outside component scope
+.mat-mdc-header-cell[mat-sort-header] {
+  cursor: pointer;
+  &:hover { background-color: var(--surface-hover); }
+}
+
+.mat-mdc-paginator {
+  background-color: var(--surface-container);
+  color: var(--text-secondary);
+  border-top: var(--border-width-thin) solid var(--border-default);
+}
+```
+
 ---
 
-# 8. Dialog / Modal Implementation
+# 8. Forms
+
+Forms require `mat-form-field` wrapping `matInput` or `mat-select`. Form field overrides must be in global `styles.scss` — they render outside component scope.
+
+Add to imports: `MatFormFieldModule`, `MatInputModule`, `MatSelectModule`, `ReactiveFormsModule`
+
+```ts
+import { inject } from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
+
+form = inject(FormBuilder).group({
+  name: ['', Validators.required],
+  status: [''],
+});
+```
+
+```html
+<form [formGroup]="form">
+  <mat-form-field appearance="outline" class="brandsync-field">
+    <mat-label>Name</mat-label>
+    <input matInput formControlName="name" />
+    <mat-error *ngIf="form.get('name')?.hasError('required')">Required</mat-error>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="brandsync-field">
+    <mat-label>Status</mat-label>
+    <mat-select formControlName="status">
+      <mat-option value="active">Active</mat-option>
+      <mat-option value="inactive">Inactive</mat-option>
+    </mat-select>
+  </mat-form-field>
+</form>
+```
+
+```scss
+// In global styles.scss — mat-form-field internals render outside component scope
+
+.brandsync-field {
+  width: 100%;
+
+  // --- M2 token layer (v14–v16) ---
+  --mdc-outlined-text-field-outline-color: var(--border-neutral-container);
+  --mdc-outlined-text-field-focus-outline-color: var(--border-primary-focus);
+  --mdc-outlined-text-field-input-text-color: var(--text-default);
+  --mdc-outlined-text-field-label-text-color: var(--text-secondary);
+  --mdc-outlined-text-field-error-outline-color: var(--color-error-default);
+
+  // --- M3 token layer (v19+) — comment out whichever is not in use ---
+  // --mat-form-field-outlined-outline-color: var(--border-neutral-container);
+  // --mat-form-field-outlined-focus-outline-color: var(--border-primary-focus);
+  // --mat-form-field-label-text-color: var(--text-secondary);
+  // --mat-form-field-error-text-color: var(--color-error-default);
+}
+```
+
+**Rule:** Comment out the token layer not in use. It documents which API is active and prevents accidental mixing.
+
+---
+
+# 9. Dialog / Modal Implementation
 
 ```ts
 // Open dialog matching BrandSync modal dimensions
@@ -426,7 +585,7 @@ this.dialog.open(ConfirmModalComponent, {
 
 ---
 
-# 9. Icon Strategy
+# 10. Icon Strategy
 
 ## Option A: Keep Lucide (Recommended for BrandSync consistency)
 
@@ -452,7 +611,7 @@ Requires `MatIconModule` import. Different visual style from BrandSync canonical
 
 ---
 
-# 10. When to Abandon Material
+# 11. When to Abandon Material
 
 Some BrandSync patterns don't map well to Material. Build these as custom (vanilla) components:
 
@@ -468,7 +627,7 @@ Mixing Material + custom components in the same page is valid and expected.
 
 ---
 
-# 11. Dark Mode
+# 12. Dark Mode
 
 Dark mode is token-driven via `data-theme` on `<html>`. BrandSync CSS variables switch automatically:
 
@@ -485,7 +644,7 @@ Material components will adopt the new token values because their overrides use 
 
 ---
 
-# 12. BrandSync Token Reference
+# 13. BrandSync Token Reference
 
 Use semantic tokens in all SCSS component overrides. Never hardcode values.
 
@@ -525,12 +684,21 @@ border-radius: var(--border-radius-full); // pills
 
 ---
 
-# 13. Validation Checklist
+# 14. Validation Checklist
 
 Before delivery:
 
+**Environment detection**
+- [ ] Standalone vs NgModule confirmed by reading an existing component — imports placed in correct location
+- [ ] Styles path read from `angular.json` — not assumed to be `src/styles.scss`
+- [ ] Existing theme file checked before writing any theming code
+- [ ] If v17–v18: active API (M2 or M3) confirmed by reading existing styles — not guessed
+
+**Tokens**
 - [ ] `_tokens.css` verified against MCP canonical — all semantic tokens present
-- [ ] `_tokens.css` imported in `src/styles.scss` and `angular.json` styles array
+- [ ] `_tokens.css` imported in the correct styles file (per `angular.json`) and listed in styles array
+
+**Theming**
 - [ ] `@angular/material` version read from `package.json` — M2 or M3 theming API selected accordingly
 - [ ] M2 projects: `mat.define-palette()` + `mat.define-light-theme()` used; overrides use `--mdc-*` tokens
 - [ ] M3 projects: `mat.theme()` used; overrides use `--mat-*` tokens
@@ -538,16 +706,23 @@ Before delivery:
 - [ ] Material theme SCSS uses raw hex values (no CSS variables in SCSS palette)
 - [ ] Component overrides use CSS variable tokens (not hardcoded values, not primitive tokens)
 - [ ] `!important` used only where Material specificity requires it — not as default
+
+**Components**
 - [ ] Dialog/modal styles placed in global `styles.scss` (not component scope)
+- [ ] Form field (`mat-form-field`) overrides placed in global `styles.scss`
+- [ ] Forms: correct token layer used (`--mdc-outlined-text-field-*` for M2, `--mat-form-field-*` for M3)
+- [ ] Tables with sorting: `MatSortModule` imported, `MatTableDataSource` used
+- [ ] Tables with pagination: `MatPaginatorModule` imported, paginator styled to match BrandSync
 - [ ] Icons strategy decided (Lucide or Material Icons) and applied consistently
-- [ ] Tables styled to match BrandSync visual output
-- [ ] Dark mode works via `data-theme` attribute
 - [ ] Custom components built for patterns that don't map to Material
+
+**Output**
+- [ ] Dark mode works via `data-theme` attribute
 - [ ] Visual output matches canonical blueprint (DOM structure differences are accepted)
 
 ---
 
-Version: 1.2
+Version: 1.3
 Mode: Material Adaptation
 Authority: Visual fidelity over structural fidelity
 Violation Policy: Accept Material DOM, enforce visual match
