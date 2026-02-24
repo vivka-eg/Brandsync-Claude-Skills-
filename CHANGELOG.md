@@ -5,6 +5,64 @@ Format: `## v[version] - [date]` with sections per skill file.
 
 ---
 
+## v0.13.0 - 2026-02-24
+
+### skills/flutter.md
+- Initial release of Flutter BrandSync adapter
+- §0 Pre-Flight: MCP token fetch, project structure check (pubspec.yaml, main.dart), canonical example fetch
+- §3 Project Setup: standard Flutter file structure, required pub.dev packages (flutter_riverpod, lucide_flutter, shared_preferences, go_router), main.dart ProviderScope entry
+- §4 Token Bridge: full CSS-to-Dart constants mapping — Color, spacing doubles, border radius doubles in `brandsync_tokens.dart`; `0x????????` sentinel forces compile error on unfilled placeholders
+- §5 ThemeData Configuration: `AppTheme.light` / `AppTheme.dark` built from token constants in `app_theme.dart`; `WidgetStateProperty` for button states; `InputDecorationTheme` for inputs; dark variant strategy
+- §6 State Management: Riverpod patterns — `StateProvider`, `StateNotifierProvider`, `FutureProvider`; `ConsumerWidget` and `ConsumerStatefulWidget` examples; `dispose()` rule
+- §7 Layout Patterns: page wrapper (Scaffold + SafeArea), card (Container + BoxDecoration), two-column (Row + SizedBox), card grid (GridView.builder), form layout, inline row, collapsible section
+- §8 List / Table Pattern: `BrandSyncTable` widget with header + data rows; status badge
+- §9 Modal / Dialog Pattern: `showDialog` + custom `Dialog` widget with explicit BrandSync shape and color
+- §10 Icon Protocol: Option A (`lucide_flutter`) and Option B (`Icons.*`); no CDN rule
+- §11 Dark Mode: `ThemeModeNotifier` with `SharedPreferences` persistence; `*Dark` token variants; no `data-theme` attribute (Flutter, not web)
+- §12 Token Reference: full Dart constant vocabulary for all BrandSync semantic tokens
+- §13 Validation Checklist: token bridge verification, ProviderScope, WidgetStateProperty states, ListView.builder rule, dispose rule, dark mode, no hardcoded values
+
+---
+
+## v0.12.0 - 2026-02-20
+
+### skills/dotnet-maui.md
+- Fixed §4 Token Bridge: removed XML comment nodes inside `<Color>` elements (comments are not text content — MAUI's Color type converter would see an empty node and silently produce transparent colors or throw); replaced with a key→CSS mapping table (prose) and a code template using `#hex` sentinel values that the XAML parser rejects loudly if left unfilled; separated spacing/radius constants (safe to use as-is) from Color tokens (must come from MCP)
+- Fixed §11 Dark Mode: removed invented dark hex values (`#1A1D27`, `#13151F`, etc.); replaced with `#hex` sentinels and an explicit pre-condition — check MCP `get_tokens` for a `[data-theme="dark"]` block first; if BrandSync has no dark theme tokens, do not invent values
+- Version bumped to 1.2
+
+---
+
+## v0.11.0 - 2026-02-20
+
+### skills/dotnet-maui.md
+- Fixed §11 Dark Mode: removed `AppThemeColor` (not a MAUI type — would cause build error); replaced with correct pattern of paired light/dark Color tokens (`SurfaceBase` + `SurfaceBaseDark`) and `AppThemeBinding` markup extension used at the property/setter level; added `AppThemeBinding` in Style setter example
+- Fixed §4 Token Bridge: added explicit ⚠️ warning that Color hex values are structural placeholders — must be replaced with actual hex values from `get_tokens` MCP response; spacing and radius values noted as safe constants; added CSS token name comments on each Color entry
+- Fixed §8 Control Styles / InputContainer: replaced invalid XAML `<Entry.Handlers>` comment placeholder (would cause parse error) with real `EntryHandler.Mapper.AppendToMapping` code in `MauiProgram.cs` for Android underline and iOS border removal
+- Fixed §8 Primary Button: added note clarifying `Button.CornerRadius` is `int` and `RoundRectangle.CornerRadius` is a struct — both accept the `x:Double` token via XAML type converters
+- Version bumped to 1.1
+
+---
+
+## v0.10.0 - 2026-02-20
+
+### skills/dotnet-maui.md
+- Initial release of .NET MAUI BrandSync adapter
+- §0 Pre-Flight: MCP token fetch, project structure check (MauiProgram.cs, App.xaml, .csproj), canonical example fetch
+- §3 Project Setup: standard MAUI file structure, required NuGet packages (CommunityToolkit.Mvvm + CommunityToolkit.Maui), MauiProgram.cs registration
+- §4 Token Bridge: full CSS-to-XAML ResourceDictionary mapping — Color, Thickness (spacing), CornerRadius, and border width tokens in `BrandSyncTokens.xaml`; App.xaml merge instruction
+- §5 XAML Page Pattern: ContentPage skeleton with BindingContext wiring and constructor injection note
+- §6 MVVM Pattern: CommunityToolkit.Mvvm source generators — `[ObservableProperty]`, `[RelayCommand]`, `ObservableCollection`; XAML binding examples
+- §7 Layout Patterns: page wrapper, card (Border+StrokeShape), two-column Grid, card grid (CollectionView GridItemsLayout), form layout, inline row
+- §8 Control Styles: PrimaryButton, SecondaryButton, InputContainer with VisualStateManager (Pressed + Disabled states), status badge
+- §9 Icon Protocol: MDI font setup via MauiProgram.cs, SVG via MauiImage, explicit rule against CDN icons
+- §10 CollectionView: header row, DataTemplate with RelativeSource command binding, selected state VisualStateManager, EmptyView
+- §11 Dark Mode: AppThemeBinding color tokens, UserAppTheme manual toggle, Preferences persistence; rule against dynamic ResourceDictionary rebuilding
+- §12 Token Reference: full XAML StaticResource vocabulary for all BrandSync semantic tokens
+- §13 Validation Checklist: token bridge verification, CT.Mvvm/CT.Maui registration, StaticResource-only rule, VSM states, CollectionView over ListView, Border over Frame, icon bundling, dark mode, empty state
+
+---
+
 ## v0.9.0 - 2026-02-20
 
 ### skills/angular-material-ui.md
