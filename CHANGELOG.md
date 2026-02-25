@@ -5,6 +5,42 @@ Format: `## v[version] - [date]` with sections per skill file.
 
 ---
 
+## v0.14.1 - 2026-02-25
+
+### skills/brandsync-foundations.md
+- Added interactive onboarding in §0 Step 1: Claude now asks two questions before any code generation
+  - Question 1: brand color — lists all 14 BrandSync brand colors by name with a mapping table (scale → light/dark mode primary hex ladder)
+  - Question 2: platform — lists all 9 supported platform options so the user explicitly confirms the target
+- Added brand color override block: if the chosen color is not Blue, generates a CSS override (`_brand.css` or appended to `_tokens.css`) that remaps all `--color-primary-*`, `--text-action`, `--icon-action`, and `--border-primary-*` semantic tokens to the chosen brand scale; dark mode block included
+- Added mobile brand color note: for Flutter/React Native/MAUI, resolved hex values for the chosen scale must be used in the token bridge (CSS vars not available)
+- Updated §3 and §4 to reference [BRAND_COLOR] and [PLATFORM] placeholders throughout
+- Added brand-color-specific checklist items: override block present, primary tokens resolve to chosen brand scale, dark mode uses `-400`/`-300`/`-200` variants
+- Version bumped to 1.1
+
+---
+
+## v0.14.0 - 2026-02-25
+
+### skills/brandsync-foundations.md
+- Initial release of the cross-framework BrandSync Foundations theme engine generator
+- §0 Pre-Flight: MCP token fetch, framework detection from project files (package.json, pubspec.yaml, .csproj), existing theme bridge check
+- §1 Token Architecture: two-layer primitive/semantic model with dark-mode switching explanation
+- §2 Core Law: enforced token authority rules across all frameworks
+- §3 Platform Scope: web-only vs universal token classification — guides mobile bridge generation
+- §4 Web Output: global `_tokens.css` import patterns for React, Vue, Angular, and plain HTML; dark mode toggle pattern
+- §5 React + MUI: `brandsyncTheme.ts` with raw hex palette (mandatory for MUI internals), CSS var `styleOverrides`, `ThemeProvider` wiring, dark mode via `data-theme` only
+- §6 Angular Material: version detection table (M2/M3), `material-theme.scss` with flattened palette palette, semantic token overrides in `styles.scss`, import order rule
+- §7 Vue 3: global import pattern, `useTheme` composable with localStorage persistence
+- §8 Tailwind CSS: `tailwind.config.ts` with full color, spacing, border-radius, shadow, font, and transition extension mapping to CSS vars; `darkMode: attribute` config
+- §9 Flutter: complete `brandsync_tokens.dart` with typed Color, spacing doubles, border radius doubles, elevation BoxShadow constants, animation Duration/Curve constants; `app_theme.dart` with `AppTheme.light` / `AppTheme.dark` using `WidgetStateProperty`
+- §10 React Native: `BrandSyncTokens.ts` with typed string/number constants (web-only tokens omitted); platform-split `BrandSyncElevation` for iOS/Android shadow APIs; `useThemeTokens()` composable for `useColorScheme()` integration
+- §11 Dark Mode: per-framework mechanism summary table; rules against dynamic theme rebuilding and invented dark values
+- §12 Resolved Token Reference: flattened spacing, border-radius, font-size, shadow (light + dark), semantic colors (light + dark), transitions, z-index — for use in framework theme configs that cannot accept CSS variables
+- §13 BrandSync Token Reference: full semantic token vocabulary (surfaces, text, actions, status, icons, borders, spacing, radius, elevation, transitions, opacity)
+- §14 Validation Checklist: framework detection, token bridge path, no hardcoded values, platform scope, dark mode persistence
+
+---
+
 ## v0.13.0 - 2026-02-24
 
 ### skills/flutter.md
