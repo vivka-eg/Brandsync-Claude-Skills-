@@ -1,0 +1,19 @@
+{
+  "name": "brandsync-skills",
+  "version": "0.2.2",
+  "description": "BrandSync framework skill rules for Claude",
+  "bin": {
+    "brandsync-skills": "bin/index.js"
+  },
+  "files": [
+    "bin/",
+    "skills/"
+  ],
+  "keywords": [
+    "brandsync",
+    "claude",
+    "mcp",
+    "skills"
+  ],
+  "license": "MIT"
+}

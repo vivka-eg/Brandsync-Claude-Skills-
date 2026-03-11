@@ -1,7 +1,7 @@
 ---
 name: vue-brandsync
 description: Maps canonical BrandSync UI to Vue 3 components using scoped styles and design tokens. Visual fidelity with full DOM control.
-version: 1.3
+version: 1.4
 execution_mode: adaptive
 error_policy: fail-with-alternatives
 component_strategy: vanilla-vue
@@ -20,7 +20,7 @@ Vue gives full DOM control — reproduce the canonical HTML structure exactly, t
 |--------|----------------|
 | DOM Structure | Match canonical HTML exactly |
 | Styling | Scoped `<style>` with BrandSync tokens |
-| Icons | `lucide-vue-next` (named imports) |
+| Icons | `@phosphor-icons/vue` (named imports) |
 | State | `ref()` / `computed()` via `<script setup>` |
 | Components | Composition API, SFC pattern |
 | Philosophy | "Reproduce canonical blueprint with Vue wiring" |
@@ -99,7 +99,7 @@ Every component follows this structure:
 ```vue
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { IconName } from 'lucide-vue-next'
+import { PhIconName } from '@phosphor-icons/vue'
 
 // State
 const myState = ref(false)
@@ -117,7 +117,7 @@ const handleAction = () => {
   <!-- Canonical DOM structure reproduced exactly -->
   <div class="prefix-wrapper">
     <button @click="handleAction" :class="{ 'prefix-wrapper--active': myState }">
-      <IconName :size="20" />
+      <PhIconName :size="20" />
       <span>Label</span>
     </button>
   </div>
@@ -185,22 +185,31 @@ const badgeClass = computed(() => ({
 
 ---
 
-# 4. Icons — `lucide-vue-next`
+# 4. Icons — Phosphor Icons
+
+BrandSync designs use Phosphor Icons. Always use `@phosphor-icons/vue`.
+
+First, confirm it is installed. If missing:
+```
+npm i @phosphor-icons/vue
+```
 
 **Always use named imports:**
 ```js
-import { Search, Bell, Plus, ChevronDown, Settings } from 'lucide-vue-next'
+import { PhMagnifyingGlass, PhBell, PhPlus, PhChevronDown, PhGear } from '@phosphor-icons/vue'
 ```
 
 **Usage in template:**
 ```html
-<Search :size="20" />
-<Bell :size="20" stroke-width="1.5" />
-<Plus :size="16" color="var(--color-primary-default)" />
+<PhMagnifyingGlass :size="20" />
+<PhBell :size="20" weight="fill" :color="'var(--icon-action)'" />
+<PhPlus :size="16" :color="'var(--icon-on-action)'" />
 ```
 
-**DO NOT use `lucide` (vanilla) in Vue — use `lucide-vue-next` only.**
-No `createIcons()` or `data-lucide` attributes — those are for vanilla JS.
+Available weights via `weight` prop: `thin`, `light`, `regular` (default), `bold`, `fill`, `duotone`.
+
+**DO NOT use `lucide-vue-next` or any other icon library.**
+No `createIcons()` or `data-lucide` attributes — those are vanilla Lucide patterns that do not apply here.
 
 ---
 
@@ -324,7 +333,7 @@ Toggle via Vue class binding:
     <aside class="inv-sidebar" :class="{ 'inv-sidebar--collapsed': collapsed }">
       <nav class="inv-sidebar__nav">
         <a class="inv-nav-item" :class="{ 'inv-nav-item--active': isActive }">
-          <SearchIcon class="inv-nav-icon" :size="18" />
+          <PhMagnifyingGlass class="inv-nav-icon" :size="18" />
           <span class="inv-nav-label">Item</span>
         </a>
       </nav>
@@ -634,7 +643,7 @@ const handleSave = () => emit('save', formData.value)
 - Use a unique prefix for ALL classes in every new component (e.g. `pd-`, `inv-`, `usr-`)
 - Always use `<script setup>` (Composition API)
 - Use `ref()` for all reactive state
-- Import Lucide icons by name from `lucide-vue-next`
+- Import Phosphor icons by name from `@phosphor-icons/vue`
 - Use semantic BrandSync tokens (`var(--surface-base)`, `var(--spacing-200)`, etc.)
 - Use `<Teleport to="body">` for modals and overlays
 - Match canonical DOM structure exactly
@@ -643,7 +652,7 @@ const handleSave = () => emit('save', formData.value)
 
 **❌ DON'T:**
 - Use Options API (`data()`, `methods:`, `computed:`) — project uses Composition API
-- Use `data-lucide` attributes or `createIcons()` — those are vanilla JS Lucide
+- Use `data-lucide` attributes, `createIcons()`, or `lucide-vue-next` — always use `@phosphor-icons/vue` with named component imports
 - Create separate `.css` files for component styles
 - Hardcode hex colors or px values that have a token equivalent
 - Use primitive tokens (`--neutral-600`) when a semantic token exists (`--text-secondary`)
@@ -684,7 +693,7 @@ Before delivery:
 - [ ] Global CSS files in `main.js` checked for class name conflicts
 - [ ] Unique class prefix chosen and applied to ALL component classes
 - [ ] `<script setup>` used (not Options API)
-- [ ] All icons imported from `lucide-vue-next` by name
+- [ ] All icons imported from `@phosphor-icons/vue` by name (e.g. `PhHouse`, `PhBell`)
 - [ ] Only valid BrandSync semantic tokens used — no hardcoded values, no made-up token names
 - [ ] Canonical DOM structure reproduced
 - [ ] All `v-for` loops have `:key`
@@ -693,11 +702,11 @@ Before delivery:
 - [ ] Scoped styles used (no separate CSS files)
 - [ ] Component works correctly whether or not global CSS is loaded
 - [ ] Dark mode works via `data-theme` attribute
-- [ ] No `data-lucide` attributes in template
+- [ ] No `data-lucide` attributes, `createIcons()` calls, or `lucide-vue-next` imports — use `@phosphor-icons/vue` components
 
 ---
 
-Version: 1.3
-Stack: Vue 3 + Vite + lucide-vue-next
+Version: 1.4
+Stack: Vue 3 + Vite + @phosphor-icons/vue
 Mode: Vanilla Vue (no UI library)
 Authority: Canonical DOM fidelity + BrandSync token compliance

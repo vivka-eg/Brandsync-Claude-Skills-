@@ -1,7 +1,7 @@
 ---
 name: angular-material-ui
 description: Maps canonical BrandSync UI to Angular Material components with heavy theming. Visual fidelity over structural fidelity.
-version: 1.3
+version: 1.4
 execution_mode: adaptive
 error_policy: fail-with-alternatives
 component_strategy: material-mapping
@@ -302,7 +302,7 @@ Use `!important` only when Material's specificity cannot be overridden otherwise
 # 5. Component Pattern
 
 ```ts
-import { Component, AfterViewInit } from '@angular/core';
+import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
@@ -315,27 +315,17 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
     MatTableModule,
     MatDialogModule,
   ],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],  // required for <ph-*> Phosphor web components
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
-export class DashboardComponent implements AfterViewInit {
+export class DashboardComponent implements OnInit {
   constructor(private dialog: MatDialog) {}
 
-  ngAfterViewInit() {
-    this.initializeTheme();
-    this.initializeIcons();  // required if using Lucide (Option A in §9)
-  }
-
-  private initializeTheme() {
+  ngOnInit() {
     const saved = localStorage.getItem('theme') as 'light' | 'dark' | null;
     if (saved) {
       document.documentElement.setAttribute('data-theme', saved);
-    }
-  }
-
-  private initializeIcons() {
-    if ((window as any).lucide) {
-      (window as any).lucide.createIcons();
     }
   }
 
@@ -386,7 +376,7 @@ Do NOT add an `imports` array to a component decorator in an NgModule-based proj
 **Canonical (vanilla):**
 ```html
 <button class="btn btn-primary" (click)="save()">
-  <i data-lucide="plus"></i>
+  <ph-plus size="16"></ph-plus>
   <span>New row</span>
 </button>
 ```
@@ -394,14 +384,14 @@ Do NOT add an `imports` array to a component decorator in an NgModule-based proj
 **Material adaptation:**
 ```html
 <button mat-raised-button color="primary" (click)="save()">
-  <mat-icon>add</mat-icon>
+  <ph-plus size="16"></ph-plus>
   <span>New row</span>
 </button>
 ```
 
 Changes made:
 - `class="btn btn-primary"` → `mat-raised-button color="primary"`
-- Lucide icon → Material icon (or keep Lucide — see §9)
+- Phosphor `<ph-*>` elements work inside Material buttons — no substitution to `mat-icon` required
 - Event handler and content unchanged
 
 ---
@@ -587,27 +577,39 @@ this.dialog.open(ConfirmModalComponent, {
 
 # 10. Icon Strategy
 
-## Option A: Keep Lucide (Recommended for BrandSync consistency)
+BrandSync designs use Phosphor Icons. Always use `@phosphor-icons/webcomponents` — never `mat-icon` or Lucide.
 
-```html
-<button mat-raised-button color="primary">
-  <i data-lucide="plus" class="btn-icon"></i>
-  New row
-</button>
+**Install (once per project):**
+```
+npm i @phosphor-icons/webcomponents
 ```
 
-Requires `createIcons()` call in `ngAfterViewInit()` — same as vanilla Angular skill.
-
-## Option B: Material Icons (Native integration)
-
-```html
-<button mat-raised-button color="primary">
-  <mat-icon>add</mat-icon>
-  New row
-</button>
+**Import once in `main.ts`:**
+```ts
+import '@phosphor-icons/webcomponents';
 ```
 
-Requires `MatIconModule` import. Different visual style from BrandSync canonical.
+**Add `CUSTOM_ELEMENTS_SCHEMA` to every component that uses `<ph-*>` elements** (already in §5 Component Pattern — apply to all new components too):
+```ts
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+
+@Component({
+  standalone: true,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  ...
+})
+```
+
+**Usage in templates:**
+```html
+<ph-plus size="16" style="color: var(--icon-on-action)"></ph-plus>
+<ph-magnifying-glass size="20" style="color: var(--icon-default)"></ph-magnifying-glass>
+<ph-bell size="20" weight="fill" style="color: var(--icon-action)"></ph-bell>
+```
+
+Icon names are kebab-case Phosphor names prefixed with `ph-`. Weight via `weight` attribute: `thin`, `light`, `regular` (default), `bold`, `fill`, `duotone`. Colors via inline style or CSS `color` property using BrandSync icon tokens.
+
+No `createIcons()`, no `MatIconModule`, no CDN script tags.
 
 ---
 
@@ -713,7 +715,8 @@ Before delivery:
 - [ ] Forms: correct token layer used (`--mdc-outlined-text-field-*` for M2, `--mat-form-field-*` for M3)
 - [ ] Tables with sorting: `MatSortModule` imported, `MatTableDataSource` used
 - [ ] Tables with pagination: `MatPaginatorModule` imported, paginator styled to match BrandSync
-- [ ] Icons strategy decided (Lucide or Material Icons) and applied consistently
+- [ ] All icons use Phosphor (`@phosphor-icons/webcomponents`); no `mat-icon`, Lucide CDN, or other icon library
+- [ ] `CUSTOM_ELEMENTS_SCHEMA` added to every component using `<ph-*>` elements
 - [ ] Custom components built for patterns that don't map to Material
 
 **Output**
@@ -722,7 +725,7 @@ Before delivery:
 
 ---
 
-Version: 1.3
+Version: 1.4
 Mode: Material Adaptation
 Authority: Visual fidelity over structural fidelity
 Violation Policy: Accept Material DOM, enforce visual match

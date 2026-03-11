@@ -1,7 +1,7 @@
 ---
 name: angular-ui
 description: Deterministic Angular execution engine that reproduces canonical BrandSync UI output using native Angular architecture. Reference-driven. No invention.
-version: 7.1
+version: 7.2
 execution_mode: strict
 error_policy: fail-hard
 component_strategy: blueprint-driven
@@ -206,9 +206,8 @@ Never:
 
 Always:
 - ✅ Standalone Angular components
-- ✅ Lucide icons via CDN script tag in `index.html`
-- ✅ `ngAfterViewInit` for icon initialization
-- ✅ Icon reinitialization after DOM mutation
+- ✅ Phosphor Icons via `@phosphor-icons/webcomponents` npm package (imported once in `main.ts`)
+- ✅ `CUSTOM_ELEMENTS_SCHEMA` in every component that uses `<ph-*>` elements
 - ✅ Theme persistence via `localStorage`
 - ✅ Desktop-first responsive approach
 - ✅ Strict TypeScript compliance
@@ -220,33 +219,23 @@ Always:
 ## Angular 17+ (signals + new control flow)
 
 ```ts
-import { Component, signal, AfterViewInit } from '@angular/core';
+import { Component, signal, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { NgClass } from '@angular/common';
 
 @Component({
   selector: 'app-name',
   standalone: true,
   imports: [NgClass],  // CommonModule not needed for @if/@for
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],  // required for <ph-*> Phosphor web components
   templateUrl: './name.component.html',
   styleUrl: './name.component.css'
 })
-export class NameComponent implements AfterViewInit {
+export class NameComponent implements OnInit {
   isCollapsed = signal(false);
   activeItem = signal('dashboard');
   items = signal([{ id: 'dashboard', label: 'Dashboard' }]);
 
-  ngAfterViewInit() {
-    this.initializeIcons();
-    this.initializeTheme();
-  }
-
-  private initializeIcons() {
-    if ((window as any).lucide) {
-      (window as any).lucide.createIcons();
-    }
-  }
-
-  private initializeTheme() {
+  ngOnInit() {
     const saved = localStorage.getItem('theme') as 'light' | 'dark' | null;
     if (saved) {
       document.documentElement.setAttribute('data-theme', saved);
@@ -271,32 +260,22 @@ export class NameComponent implements AfterViewInit {
 ## Angular < 17 (RxJS + structural directives)
 
 ```ts
-import { Component, AfterViewInit } from '@angular/core';
+import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-name',
   standalone: true,
   imports: [CommonModule],  // provides *ngIf, *ngFor, NgClass, NgStyle
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],  // required for <ph-*> Phosphor web components
   templateUrl: './name.component.html',
   styleUrls: ['./name.component.css']  // array syntax for < 17
 })
-export class NameComponent implements AfterViewInit {
+export class NameComponent implements OnInit {
   isCollapsed = false;
   activeItem = 'dashboard';
 
-  ngAfterViewInit() {
-    this.initializeIcons();
-    this.initializeTheme();
-  }
-
-  private initializeIcons() {
-    if ((window as any).lucide) {
-      (window as any).lucide.createIcons();
-    }
-  }
-
-  private initializeTheme() {
+  ngOnInit() {
     const saved = localStorage.getItem('theme') as 'light' | 'dark' | null;
     if (saved) {
       document.documentElement.setAttribute('data-theme', saved);
@@ -322,33 +301,41 @@ Pure markup without Angular lifecycle integration is invalid.
 
 # 8. Icon Protocol
 
-Lucide icons are loaded via CDN script tag in `index.html` — never via npm.
+BrandSync designs use Phosphor Icons. Always use the `@phosphor-icons/webcomponents` npm package — never a CDN script tag.
 
-**Add to `src/index.html` `<head>`:**
-```html
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+**Install (once per project):**
+```
+npm i @phosphor-icons/webcomponents
 ```
 
-**Initialize in `ngAfterViewInit()`:**
+**Import once in `main.ts`:**
 ```ts
-ngAfterViewInit() {
-  if ((window as any).lucide) {
-    (window as any).lucide.createIcons();
-  }
-}
+import '@phosphor-icons/webcomponents';
 ```
 
-**Re-run `createIcons()` after every DOM mutation:**
-- After `@if` / `*ngIf` toggles
-- After sidebar collapse/expand
-- After theme toggle
-- After dynamic list rendering
+**Add `CUSTOM_ELEMENTS_SCHEMA` to every component that uses `<ph-*>` elements:**
+```ts
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
-**Use `data-lucide` in templates:**
+@Component({
+  standalone: true,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  ...
+})
+```
+
+**Use `<ph-*>` elements in templates:**
 ```html
-<i data-lucide="search" class="nav-icon"></i>
-<i data-lucide="bell" class="nav-icon"></i>
+<ph-magnifying-glass size="20" style="color: var(--icon-default)"></ph-magnifying-glass>
+<ph-bell size="20" weight="fill" style="color: var(--icon-action)"></ph-bell>
+<ph-plus size="16" style="color: var(--icon-on-action)"></ph-plus>
 ```
+
+Icon names are kebab-case Phosphor names prefixed with `ph-`. Weight via `weight` attribute: `thin`, `light`, `regular` (default), `bold`, `fill`, `duotone`.
+
+No `createIcons()`. No re-initialization after DOM mutations. Phosphor web components self-register and render wherever `<ph-*>` elements appear in the DOM.
+
+Do NOT use `data-lucide` attributes, CDN script tags, or the Lucide library.
 
 ---
 
@@ -467,8 +454,9 @@ Before delivery:
 
 - [ ] `_tokens.css` verified against MCP canonical — all semantic tokens present
 - [ ] `_tokens.css` imported in `src/styles.css` or `angular.json` styles array
-- [ ] Lucide CDN script tag present in `src/index.html`
-- [ ] `createIcons()` called in `ngAfterViewInit()` and after every DOM mutation
+- [ ] `@phosphor-icons/webcomponents` installed and imported once in `main.ts`
+- [ ] `CUSTOM_ELEMENTS_SCHEMA` added to every component that uses `<ph-*>` elements
+- [ ] No CDN script tags, `data-lucide` attributes, or `createIcons()` calls
 - [ ] Correct control flow syntax for detected Angular version (`@if`/`@for` vs `*ngIf`/`*ngFor`)
 - [ ] `CommonModule` imported for Angular < 17; `NgClass`/`NgStyle` imported individually for 17+
 - [ ] No Angular Material, PrimeNG, Bootstrap, Tailwind, or CSS framework used
@@ -481,7 +469,7 @@ Before delivery:
 
 ---
 
-Version: 7.1
+Version: 7.2
 Mode: Blueprint-Driven
 Authority: Angular reproduces canonical output
 Violation Policy: Fail Hard

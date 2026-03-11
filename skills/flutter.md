@@ -822,26 +822,33 @@ class MyModal extends StatelessWidget {
 
 # 10. Icon Protocol
 
-## Option A: `lucide_flutter` (Recommended for BrandSync consistency)
+## Required: `phosphor_flutter`
 
-```dart
-import 'package:lucide_flutter/lucide_flutter.dart';
+BrandSync designs use Phosphor Icons. Always use `phosphor_flutter` — never `lucide_flutter`,
+`icons`, or any other icon package, unless the project explicitly excludes it.
 
-Icon(LucideIcons.search, size: 20, color: BrandSyncTokens.textSecondary)
-Icon(LucideIcons.bell,   size: 20, color: BrandSyncTokens.textDefault)
-Icon(LucideIcons.plus,   size: 16, color: BrandSyncTokens.textOnAction)
+First, confirm `phosphor_flutter` is in `pubspec.yaml`. If missing, install it:
+
+```
+flutter pub add phosphor_flutter
 ```
 
-## Option B: Material Icons (Built-in, zero setup)
-
 ```dart
-Icon(Icons.search,                   size: 20, color: BrandSyncTokens.textSecondary)
-Icon(Icons.notifications_outlined,   size: 20)
-Icon(Icons.add,                      size: 16)
+import 'package:phosphor_flutter/phosphor_flutter.dart';
+
+// Regular weight (default)
+PhosphorIcon(PhosphorIcons.magnifyingGlass(), size: 20, color: BrandSyncTokens.iconDefault)
+PhosphorIcon(PhosphorIcons.bell(),            size: 20, color: BrandSyncTokens.iconDefault)
+PhosphorIcon(PhosphorIcons.plus(),            size: 16, color: BrandSyncTokens.iconOnAction)
+
+// Bold weight
+PhosphorIcon(PhosphorIcons.magnifyingGlass(PhosphorIconsStyle.bold), size: 20, color: BrandSyncTokens.iconDefault)
+
+// Fill weight
+PhosphorIcon(PhosphorIcons.bell(PhosphorIconsStyle.fill), size: 20, color: BrandSyncTokens.iconAction)
 ```
 
-Pick one option per project and apply consistently. Do not mix `LucideIcons` and `Icons.*`
-within the same component.
+Available weights: `PhosphorIconsStyle.thin`, `.light`, `.regular` (default), `.bold`, `.fill`, `.duotone`
 
 **DO NOT use external CDN icon sources** — Flutter apps are offline-capable. Bundle all icons.
 

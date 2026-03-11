@@ -780,6 +780,69 @@
   --grid-margin-lg:  var(--spacing-400);  /* 32px - page edge on desktop */
   --sidebar-width:   var(--sizing-3200);  /* 256px - standard sidebar */
   --panel-min-width: var(--sizing-3200);  /* 256px - minimum panel width */
+
+  /* ====================================== */
+  /* 3. COMPONENT — Input                   */
+  /* ====================================== */
+
+  /* Input — Background */
+  --input-bg-default:  var(--surface-base);
+  --input-bg-filled:   var(--surface-raised);
+  --input-bg-disabled: var(--surface-action-disabled);
+
+  /* Input — Border */
+  --input-border-default:  var(--border-neutral-container);
+  --input-border-hover:    var(--border-neutral-container-hover);  /* web only — no pointer on touch */
+  --input-border-focus:    var(--border-neutral-focus);            /* web only — no keyboard focus on mobile */
+  --input-border-disabled: var(--border-neutral-disabled);
+  --input-border-error:    var(--border-error);
+
+  /* Input — Text */
+  --input-text:          var(--text-default);
+  --input-text-success:  var(--text-success);
+  --input-text-disabled: var(--text-on-disabled);
+  --input-placeholder:   var(--text-secondary);
+  --input-label:         var(--text-default);
+  --input-text-error:    var(--text-error);
+  --input-description:   var(--text-secondary);
+  --input-label-focus:   var(--color-primary-default);
+
+  /* Input — Icon */
+  --input-icon:          var(--icon-secondary);
+  --input-icon-error:    var(--icon-error);
+  --input-icon-success:  var(--icon-success);
+  --input-icon-disabled: var(--icon-disabled);
+
+  /* ====================================== */
+  /* COMPONENT — Paper (cards, surfaces)    */
+  /* ====================================== */
+
+  --paper-bg-base:      var(--surface-base);
+  --paper-bg-raised:    var(--surface-raised);
+  --paper-bg-container: var(--surface-container);
+  --paper-bg-hover:     var(--surface-hover);     /* web only — no pointer on touch */
+  --paper-bg-disabled:  var(--surface-action-disabled);
+  --paper-border:       var(--border-neutral-container);
+
+  /* ====================================== */
+  /* COMPONENT — Button                     */
+  /* ====================================== */
+
+  /* Button — Primary */
+  --btn-primary-default:   var(--color-primary-default);
+  --btn-primary-hover:     var(--color-primary-hover);     /* web only — no pointer on touch */
+  --btn-primary-focus:     var(--color-primary-focused);   /* web only — no keyboard focus on mobile */
+  --btn-primary-pressed:   var(--color-primary-pressed);
+  --btn-primary-disabled:  var(--surface-action-disabled);
+  --btn-primary-container: var(--color-primary-container);
+
+  /* Button — Neutral */
+  --btn-neutral-default:   var(--color-neutral-default);
+  --btn-neutral-hover:     var(--color-neutral-hover);           /* web only — no pointer on touch */
+  --btn-neutral-focus:     var(--color-neutral-container-focused); /* web only — no keyboard focus on mobile */
+  --btn-neutral-pressed:   var(--color-primary-pressed);
+  --btn-neutral-disabled:  var(--surface-action-disabled);
+  --btn-neutral-container: var(--color-neutral-container);
 }
 
 /* Dark Mode */

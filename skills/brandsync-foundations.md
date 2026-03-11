@@ -1,7 +1,7 @@
 ---
 name: brandsync-foundations
-description: Cross-framework foundation skill that generates a native theme engine from the BrandSync token system. Detects the target framework, resolves the two-layer token architecture, and produces the correct token bridge — CSS custom properties for web, Dart constants for Flutter, JS/TS for React Native, XAML for MAUI, and Tailwind config for utility-first CSS.
-version: 1.1
+description: Cross-framework foundation skill that generates a native theme engine from the BrandSync token system. Detects the target framework, resolves the two-layer token architecture, and produces the correct token bridge — CSS custom properties for web, Dart constants for Flutter, Kotlin objects for Jetpack Compose, Swift enums for SwiftUI, JS/TS for React Native, XAML for MAUI, and Tailwind config for utility-first CSS.
+version: 1.2
 execution_mode: adaptive
 error_policy: fail-with-alternatives
 component_strategy: token-bridge-first
@@ -97,9 +97,11 @@ Ask the user:
 > 7. Mobile — Flutter
 > 8. Mobile — React Native
 > 9. Desktop/Mobile — .NET MAUI
+> 10. Mobile — Android (Jetpack Compose)
+> 11. Mobile — iOS/macOS (SwiftUI)
 
 Once the user answers, record the choice as **[PLATFORM]** and jump to the matching section
-(§4 through §10) after completing Steps 2–4 below.
+(§4 through §12) after completing Steps 2–4 below.
 
 ---
 
@@ -170,8 +172,8 @@ tokens to the chosen brand scale:
 }
 ```
 
-For mobile platforms (Flutter, React Native, MAUI) that cannot use CSS variables, look up the
-resolved hex values for the chosen brand color scale in §12 and use those directly in the token
+For mobile platforms (Flutter, Jetpack Compose, SwiftUI, React Native, MAUI) that cannot use CSS variables, look up the
+resolved hex values for the chosen brand color scale in §14 and use those directly in the token
 bridge file.
 
 ## Step 3: Detect the framework (confirm [PLATFORM])
@@ -189,6 +191,8 @@ If the user already answered Question 2, use that answer. Otherwise read the pro
 | `pubspec.yaml` | Flutter |
 | `package.json` with `react-native` | React Native |
 | `.csproj` with `Microsoft.Maui` | .NET MAUI |
+| `build.gradle` or `build.gradle.kts` with `compose` dependency | Jetpack Compose |
+| `.xcodeproj` / `Package.swift` / `*.swift` files present | SwiftUI |
 
 If the user's stated platform and detected framework conflict, ask before proceeding.
 
@@ -201,8 +205,52 @@ Before generating, check if a theme bridge already exists:
 - Flutter: Does `lib/tokens/brandsync_tokens.dart` exist?
 - React Native: Does `src/tokens/BrandSyncTokens.ts` exist?
 - MAUI: Does `BrandSyncTokens.xaml` exist in `Resources/`?
+- Jetpack Compose: Does `ui/theme/BrandSyncTokens.kt` exist?
+- SwiftUI: Does `Theme/BrandSyncTokens.swift` exist?
 
 If a partial implementation exists, complete it — do not replace working code.
+
+## Step 5: Install Phosphor Icons
+
+Check whether the correct Phosphor package is already present in the project's dependency file.
+If it is missing, install it now — before writing any component code.
+
+| Platform             | Check for                       | Install command                        |
+|----------------------|---------------------------------|----------------------------------------|
+| React                | `@phosphor-icons/react` in `package.json` | `npm i @phosphor-icons/react` |
+| Vue 3                | `@phosphor-icons/vue` in `package.json` | `npm i @phosphor-icons/vue` |
+| Angular              | `@phosphor-icons/webcomponents` in `package.json` | `npm i @phosphor-icons/webcomponents` |
+| Tailwind / plain web | `@phosphor-icons/web` in `package.json` | `npm i @phosphor-icons/web` |
+
+**Angular — required extra step:** After installing, add `CUSTOM_ELEMENTS_SCHEMA` to every
+module or standalone component that uses `<ph-*>` elements, otherwise Angular will throw an
+unknown element error at compile time:
+
+```ts
+import { CUSTOM_ELEMENTS_SCHEMA, Component } from '@angular/core';
+import '@phosphor-icons/webcomponents';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  template: `<ph-house></ph-house>`,
+})
+export class AppComponent {}
+```
+
+Or for NgModule-based projects, add it once to the root module:
+```ts
+@NgModule({ schemas: [CUSTOM_ELEMENTS_SCHEMA] })
+```
+| Flutter              | `phosphor_flutter` in `pubspec.yaml` | `flutter pub add phosphor_flutter` |
+| React Native         | `phosphor-react-native` in `package.json` | `npm i phosphor-react-native` |
+| .NET MAUI            | No package — use inline SVG from phosphoricons.com | — |
+| Jetpack Compose      | Not applicable — omit Phosphor for native Android | — |
+| SwiftUI              | Not applicable — omit Phosphor for native iOS/macOS | — |
+
+Do not skip this step if the project already has a different icon library installed. Phosphor
+must be added alongside it — do not remove the existing library.
 
 ---
 
@@ -241,7 +289,8 @@ correct appearance — no component changes needed.
 3. 🟢 Layer 2 semantic tokens are always the correct reference in component code
 4. ❌ Never hardcode `#0062C1`, `24px`, `8px`, `rgba(...)` in component or style code
 5. ❌ Never use Layer 1 primitives in component code — only in mandatory theme setup locations
-6. ✅ Resolved raw values (from §12) are only permitted in framework theme config that cannot accept CSS variables
+6. ✅ Resolved raw values (from §14) are only permitted in framework theme config that cannot accept CSS variables
+7. ❌ Never use Lucide, Heroicons, Font Awesome, Material Icons, or any other icon library — always use Phosphor Icons (see §17)
 
 ---
 
@@ -270,7 +319,7 @@ Omit web-only tokens when generating for mobile platforms (Flutter, React Native
 - Typography: font-family, font-size, font-weight, line-height, letter-spacing, text-style tokens
 - Spacing + sizing
 - Border radius + border width
-- Elevation / shadows (adapt to platform shadow API — see §12)
+- Elevation / shadows (adapt to platform shadow API — see §14)
 - `--duration-*` + `--easing-*` (map to platform animation primitives)
 - `--z-index-*` (map to platform layering concept)
 - `--container-max`, `--sidebar-width`, `--panel-min-width`
@@ -331,7 +380,7 @@ Two-layer strategy is mandatory — MUI's internal color processing requires raw
 ```typescript
 import { createTheme } from '@mui/material/styles';
 
-// Raw hex values sourced from §12 resolved reference.
+// Raw hex values sourced from §14 resolved reference.
 // MUI's palette needs these to compute variants and contrast.
 export const brandsyncTheme = createTheme({
   palette: {
@@ -718,7 +767,7 @@ import 'package:flutter/material.dart';
 // ============================================================
 // BrandSync Token Bridge
 // Semantic tokens only — components reference these constants.
-// Values sourced from _tokens.css resolved reference (§12).
+// Values sourced from _tokens.css resolved reference (§14).
 // ============================================================
 
 abstract class BrandSyncTokens {
@@ -766,17 +815,102 @@ abstract class BrandSyncTokens {
   static const Color textActionDark    = Color(0xFF3E88EF);  // --primary-400
 
   // --- Status ---
-  static const Color colorSuccessDefault = Color(0xFF11714E);  // --success-600
-  static const Color colorWarningDefault = Color(0xFF805D00);  // --warning-600
-  static const Color colorErrorDefault   = Color(0xFFB92F31);  // --error-600
-  static const Color colorInfoDefault    = Color(0xFF0066AE);  // --information-600
+  static const Color colorSuccessDefault   = Color(0xFF11714E);  // --success-600
+  static const Color colorSuccessContainer = Color(0xFFC5EBD5);  // --success-100
+  static const Color colorWarningDefault   = Color(0xFF805D00);  // --warning-600
+  static const Color colorWarningContainer = Color(0xFFF1BD51);  // --warning-200
+  static const Color colorErrorDefault     = Color(0xFFB92F31);  // --error-600
+  static const Color colorErrorContainer   = Color(0xFFFFDAD7);  // --error-100
+  static const Color colorInfoDefault      = Color(0xFF0066AE);  // --information-600
+  static const Color colorInfoContainer    = Color(0xFFD6E3F8);  // --information-100
+  static const Color colorInfoActive       = Color(0xFF003D6C);  // --information-800
+
+  // --- Status (dark) ---
+  static const Color colorSuccessDefaultDark = Color(0xFF469873);  // --success-400
+  static const Color colorWarningDefaultDark = Color(0xFFB18100);  // --warning-400
+  static const Color colorErrorDefaultDark   = Color(0xFFEE5351);  // --error-400
+  static const Color colorInfoDefaultDark    = Color(0xFF448CD6);  // --information-400
+
+  // --- Status surfaces (light) ---
+  static const Color surfaceSuccess  = Color(0xFFE5F5E9);  // --success-50
+  static const Color surfaceWarning  = Color(0xFFFFEFDB);  // --warning-50
+  static const Color surfaceError    = Color(0xFFFCECEA);  // --error-50
+  static const Color surfaceInfo     = Color(0xFFEDF0FA);  // --information-50
+  static const Color surfaceRaised   = Color(0xFFFFFFFF);  // --static-white
+  static const Color surfaceInset    = Color(0xFFEFF0F8);  // --neutral-50
+  static const Color surfaceOnAction = Color(0xFFFBFBFB);  // --gray-25
+
+  // --- Status surfaces (dark) ---
+  static const Color surfaceSuccessDark  = Color(0xFF11714E);  // --success-600
+  static const Color surfaceWarningDark  = Color(0xFF805D00);  // --warning-600
+  static const Color surfaceErrorDark    = Color(0xFFB92F31);  // --error-600
+  static const Color surfaceInfoDark     = Color(0xFF0066AE);  // --information-600
+  static const Color surfaceRaisedDark   = Color(0xFF21262E);  // --neutral-900
+  static const Color surfaceInsetDark    = Color(0xFF21262E);  // --neutral-900
+  static const Color surfaceOnActionDark = Color(0xFF53585C);  // --gray-900
+
+  // --- Text (status) ---
+  static const Color textInverse        = Color(0xFFFFFFFF);  // --static-white
+  static const Color textSuccess        = Color(0xFF1B5D43);  // --success-700
+  static const Color textWarning        = Color(0xFF6B4D00);  // --warning-700
+  static const Color textError          = Color(0xFF982A2A);  // --error-700
+  static const Color textInfo           = Color(0xFF005592);  // --information-700
+  static const Color textOnSuccess      = Color(0xFFFFFFFF);  // --static-white
+  static const Color textOnWarning      = Color(0xFF332300);  // --warning-900
+  static const Color textOnError        = Color(0xFFFFFFFF);  // --static-white
+  static const Color textOnInfo         = Color(0xFFFFFFFF);  // --static-white
+  static const Color textNeutralDefault = Color(0xFF4D535F);  // --neutral-700
+
+  // --- Text (status, dark) ---
+  static const Color textInverseDark        = Color(0xFF000000);  // --static-black
+  static const Color textSuccessDark        = Color(0xFF6BB491);  // --success-300
+  static const Color textWarningDark        = Color(0xFFD39B00);  // --warning-300
+  static const Color textErrorDark          = Color(0xFFFF807A);  // --error-300
+  static const Color textInfoDark           = Color(0xFF73A9EA);  // --information-300
+  static const Color textOnSuccessDark      = Color(0xFF000000);  // --static-black
+  static const Color textOnWarningDark      = Color(0xFF000000);  // --static-black
+  static const Color textOnErrorDark        = Color(0xFF000000);  // --static-black
+  static const Color textOnInfoDark         = Color(0xFF000000);  // --static-black
+  static const Color textNeutralDefaultDark = Color(0xFFA0A5B4);  // --neutral-300
+
+  // --- Neutral actions ---
+  static const Color colorNeutralDefault   = Color(0xFF4D535F);  // --neutral-700
+  static const Color colorNeutralContainer = Color(0xFFF9FAFB);  // --neutral-25
+
+  // --- Neutral actions (dark) ---
+  static const Color colorNeutralDefaultDark   = Color(0xFFA0A5B4);  // --neutral-300
+  static const Color colorNeutralContainerDark = Color(0xFF21262E);  // --neutral-900
+
+  // --- Icons (status) ---
+  static const Color iconInverse        = Color(0xFFFFFFFF);  // --static-white
+  static const Color iconSuccess        = Color(0xFF1B5D43);  // --success-700
+  static const Color iconWarning        = Color(0xFF6B4D00);  // --warning-700
+  static const Color iconError          = Color(0xFF982A2A);  // --error-700
+  static const Color iconInfo           = Color(0xFF005592);  // --information-700
+  static const Color iconNeutralDefault = Color(0xFF4D535F);  // --neutral-700
+
+  // --- Icons (status, dark) ---
+  static const Color iconInverseDark        = Color(0xFF000000);  // --static-black
+  static const Color iconSuccessDark        = Color(0xFF469873);  // --success-400
+  static const Color iconWarningDark        = Color(0xFFD39B00);  // --warning-300
+  static const Color iconErrorDark          = Color(0xFFFF807A);  // --error-300
+  static const Color iconInfoDark           = Color(0xFF73A9EA);  // --information-300
+  static const Color iconNeutralDefaultDark = Color(0xFFA0A5B4);  // --neutral-300
 
   // --- Borders ---
   static const Color borderDefault           = Color(0xFFDEE2ED);  // --neutral-100
   static const Color borderNeutralContainer  = Color(0xFFC2C7D3);  // --neutral-200
   static const Color borderPrimaryFocus      = Color(0xFF0062C1);  // --primary-600
+  static const Color borderSuccess           = Color(0xFF00855B);  // --success-500
+  static const Color borderWarning           = Color(0xFF956D00);  // --warning-500
+  static const Color borderError             = Color(0xFF982A2A);  // --error-700
+  static const Color borderInfo             = Color(0xFF0078CB);  // --information-500
   static const Color borderDefaultDark       = Color(0xFF363C47);  // --neutral-800
   static const Color borderNeutralContainerDark = Color(0xFF4D535F); // --neutral-700
+  static const Color borderSuccessDark       = Color(0xFF469873);  // --success-400
+  static const Color borderWarningDark       = Color(0xFFB18100);  // --warning-400
+  static const Color borderErrorDark         = Color(0xFFFF807A);  // --error-300
+  static const Color borderInfoDark          = Color(0xFF448CD6);  // --information-400
 
   // --- Spacing (as doubles, in logical pixels) ---
   static const double spacing25  =  2.0;
@@ -953,7 +1087,7 @@ import { Platform, ViewStyle } from 'react-native';
 // ============================================================
 // BrandSync Token Bridge — React Native
 // Semantic tokens only. Web-only tokens (hover, focus, transitions) omitted.
-// Values from §12 resolved reference.
+// Values from §14 resolved reference.
 // ============================================================
 
 export const BrandSyncTokens = {
@@ -1105,7 +1239,799 @@ export function useThemeTokens() {
 
 ---
 
-# 11. Dark Mode
+# 11. Jetpack Compose Theme Engine
+
+Jetpack Compose cannot use CSS variables. All tokens must be translated to typed Kotlin constants.
+
+## File: `ui/theme/BrandSyncTokens.kt`
+
+```kotlin
+package com.yourapp.ui.theme
+
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.FontWeight
+
+// ============================================================
+// BrandSync Token Bridge — Jetpack Compose
+// Semantic tokens only — components reference these constants.
+// Values sourced from _tokens.css resolved reference (§14).
+// ============================================================
+
+object BrandSyncTokens {
+  // --- Surfaces (light) ---
+  val surfaceBase       = Color(0xFFFFFFFF)  // --static-white
+  val surfaceContainer  = Color(0xFFF9FAFB)  // --neutral-25
+  val surfaceHover      = Color(0xFFEFF0F8)  // --neutral-50
+  val surfaceSelected   = Color(0xFFDEE2ED)  // --neutral-100
+  val surfaceAction     = Color(0xFF0062C1)  // --primary-600
+  val surfaceInverse    = Color(0xFF21262E)  // --neutral-900
+
+  // --- Surfaces (dark) ---
+  val surfaceBaseDark      = Color(0xFF191C22)  // --neutral-950
+  val surfaceContainerDark = Color(0xFF21262E)  // --neutral-900
+  val surfaceHoverDark     = Color(0xFF363C47)  // --neutral-800
+  val surfaceSelectedDark  = Color(0xFF4D535F)  // --neutral-700
+
+  // --- Primary (light) ---
+  val colorPrimaryDefault   = Color(0xFF0062C1)  // --primary-600
+  val colorPrimaryHover     = Color(0xFF0051A2)  // --primary-700
+  val colorPrimaryPressed   = Color(0xFF003A78)  // --primary-800
+  val colorPrimaryContainer = Color(0xFFEEF0FA)  // --primary-50
+
+  // --- Primary (dark) ---
+  val colorPrimaryDefaultDark = Color(0xFF3E88EF)  // --primary-400
+  val colorPrimaryHoverDark   = Color(0xFF7AA6F2)  // --primary-300
+  val colorPrimaryPressedDark = Color(0xFFAEC7F8)  // --primary-200
+
+  // --- Text (light) ---
+  val textDefault   = Color(0xFF000000)  // --static-black
+  val textSecondary = Color(0xFF5D6472)  // --neutral-600
+  val textMuted     = Color(0xFF6D7585)  // --neutral-500
+  val textOnAction  = Color(0xFFFFFFFF)  // --static-white
+  val textAction    = Color(0xFF0062C1)  // --primary-600
+  val textDisabled  = Color(0xFFA0A5B4)  // --neutral-300
+
+  // --- Text (dark) ---
+  val textDefaultDark   = Color(0xFFFFFFFF)  // --static-white
+  val textSecondaryDark = Color(0xFFC2C7D3)  // --neutral-200
+  val textMutedDark     = Color(0xFFA0A5B4)  // --neutral-300
+  val textOnActionDark  = Color(0xFF000000)  // --static-black
+  val textActionDark    = Color(0xFF3E88EF)  // --primary-400
+
+  // --- Icons (light) ---
+  val iconDefault   = Color(0xFF21262E)  // --neutral-900
+  val iconSecondary = Color(0xFF5D6472)  // --neutral-600
+  val iconMuted     = Color(0xFF828998)  // --neutral-400
+  val iconAction    = Color(0xFF0062C1)  // --primary-600 (action icon color)
+  val iconDisabled  = Color(0xFFA0A5B4)  // --neutral-300
+
+  // --- Icons (dark) ---
+  val iconDefaultDark   = Color(0xFFFFFFFF)
+  val iconSecondaryDark = Color(0xFFC2C7D3)  // --neutral-200
+  val iconMutedDark     = Color(0xFF828998)  // --neutral-400
+  val iconActionDark    = Color(0xFF3E88EF)  // --primary-400
+
+  // --- Status ---
+  val colorSuccessDefault   = Color(0xFF11714E)  // --success-600
+  val colorSuccessContainer = Color(0xFFC5EBD5)  // --success-100
+  val colorWarningDefault   = Color(0xFF805D00)  // --warning-600
+  val colorWarningContainer = Color(0xFFF1BD51)  // --warning-200
+  val colorErrorDefault     = Color(0xFFB92F31)  // --error-600
+  val colorErrorContainer   = Color(0xFFFFDAD7)  // --error-100
+  val colorInfoDefault      = Color(0xFF0066AE)  // --information-600
+  val colorInfoContainer    = Color(0xFFD6E3F8)  // --information-100
+  val colorInfoActive       = Color(0xFF003D6C)  // --information-800
+
+  // --- Status (dark) ---
+  val colorSuccessDefaultDark = Color(0xFF469873)  // --success-400
+  val colorWarningDefaultDark = Color(0xFFB18100)  // --warning-400
+  val colorErrorDefaultDark   = Color(0xFFEE5351)  // --error-400
+  val colorInfoDefaultDark    = Color(0xFF448CD6)  // --information-400
+
+  // --- Status surfaces (light) ---
+  val surfaceSuccess = Color(0xFFE5F5E9)  // --success-50
+  val surfaceWarning = Color(0xFFFFEFDB)  // --warning-50
+  val surfaceError   = Color(0xFFFCECEA)  // --error-50
+  val surfaceInfo    = Color(0xFFEDF0FA)  // --information-50
+  val surfaceRaised  = Color(0xFFFFFFFF)  // --static-white
+  val surfaceInset   = Color(0xFFEFF0F8)  // --neutral-50
+  val surfaceOnAction = Color(0xFFFBFBFB) // --gray-25
+
+  // --- Status surfaces (dark) ---
+  val surfaceSuccessDark  = Color(0xFF11714E)  // --success-600
+  val surfaceWarningDark  = Color(0xFF805D00)  // --warning-600
+  val surfaceErrorDark    = Color(0xFFB92F31)  // --error-600
+  val surfaceInfoDark     = Color(0xFF0066AE)  // --information-600
+  val surfaceRaisedDark   = Color(0xFF21262E)  // --neutral-900
+  val surfaceInsetDark    = Color(0xFF21262E)  // --neutral-900
+  val surfaceOnActionDark = Color(0xFF53585C)  // --gray-900
+
+  // --- Text (status) ---
+  val textInverse        = Color(0xFFFFFFFF)  // --static-white
+  val textSuccess        = Color(0xFF1B5D43)  // --success-700
+  val textWarning        = Color(0xFF6B4D00)  // --warning-700
+  val textError          = Color(0xFF982A2A)  // --error-700
+  val textInfo           = Color(0xFF005592)  // --information-700
+  val textOnSuccess      = Color(0xFFFFFFFF)  // --static-white
+  val textOnWarning      = Color(0xFF332300)  // --warning-900
+  val textOnError        = Color(0xFFFFFFFF)  // --static-white
+  val textOnInfo         = Color(0xFFFFFFFF)  // --static-white
+  val textNeutralDefault = Color(0xFF4D535F)  // --neutral-700
+
+  // --- Text (status, dark) ---
+  val textInverseDark        = Color(0xFF000000)  // --static-black
+  val textSuccessDark        = Color(0xFF6BB491)  // --success-300
+  val textWarningDark        = Color(0xFFD39B00)  // --warning-300
+  val textErrorDark          = Color(0xFFFF807A)  // --error-300
+  val textInfoDark           = Color(0xFF73A9EA)  // --information-300
+  val textOnSuccessDark      = Color(0xFF000000)  // --static-black
+  val textOnWarningDark      = Color(0xFF000000)  // --static-black
+  val textOnErrorDark        = Color(0xFF000000)  // --static-black
+  val textOnInfoDark         = Color(0xFF000000)  // --static-black
+  val textNeutralDefaultDark = Color(0xFFA0A5B4)  // --neutral-300
+
+  // --- Neutral actions ---
+  val colorNeutralDefault   = Color(0xFF4D535F)  // --neutral-700
+  val colorNeutralContainer = Color(0xFFF9FAFB)  // --neutral-25
+
+  // --- Neutral actions (dark) ---
+  val colorNeutralDefaultDark   = Color(0xFFA0A5B4)  // --neutral-300
+  val colorNeutralContainerDark = Color(0xFF21262E)  // --neutral-900
+
+  // --- Icons (status) ---
+  val iconInverse       = Color(0xFFFFFFFF)  // --static-white
+  val iconSuccess       = Color(0xFF1B5D43)  // --success-700
+  val iconWarning       = Color(0xFF6B4D00)  // --warning-700
+  val iconError         = Color(0xFF982A2A)  // --error-700
+  val iconInfo          = Color(0xFF005592)  // --information-700
+  val iconNeutralDefault = Color(0xFF4D535F) // --neutral-700
+
+  // --- Icons (status, dark) ---
+  val iconInverseDark        = Color(0xFF000000)  // --static-black
+  val iconSuccessDark        = Color(0xFF469873)  // --success-400
+  val iconWarningDark        = Color(0xFFD39B00)  // --warning-300
+  val iconErrorDark          = Color(0xFFFF807A)  // --error-300
+  val iconInfoDark           = Color(0xFF73A9EA)  // --information-300
+  val iconNeutralDefaultDark = Color(0xFFA0A5B4)  // --neutral-300
+
+  // --- Borders (light) ---
+  val borderDefault             = Color(0xFFDEE2ED)  // --neutral-100
+  val borderNeutralContainer    = Color(0xFFC2C7D3)  // --neutral-200
+  val borderPrimaryFocus        = Color(0xFF0062C1)  // --primary-600
+  val borderSuccess             = Color(0xFF00855B)  // --success-500
+  val borderWarning             = Color(0xFF956D00)  // --warning-500
+  val borderError               = Color(0xFF982A2A)  // --error-700
+  val borderInfo                = Color(0xFF0078CB)  // --information-500
+
+  // --- Borders (dark) ---
+  val borderDefaultDark             = Color(0xFF363C47)  // --neutral-800
+  val borderNeutralContainerDark    = Color(0xFF4D535F)  // --neutral-700
+  val borderSuccessDark             = Color(0xFF469873)  // --success-400
+  val borderWarningDark             = Color(0xFFB18100)  // --warning-400
+  val borderErrorDark               = Color(0xFFFF807A)  // --error-300
+  val borderInfoDark                = Color(0xFF448CD6)  // --information-400
+
+  // --- Spacing ---
+  val spacing25  =  2.dp
+  val spacing50  =  4.dp
+  val spacing75  =  6.dp
+  val spacing100 =  8.dp
+  val spacing150 = 12.dp
+  val spacing200 = 16.dp
+  val spacing250 = 20.dp
+  val spacing300 = 24.dp
+  val spacing350 = 28.dp
+  val spacing400 = 32.dp
+  val spacing500 = 40.dp
+  val spacing600 = 48.dp
+  val spacing800 = 64.dp
+
+  // --- Border Radius ---
+  val borderRadius50   =  4.dp
+  val borderRadius75   =  6.dp
+  val borderRadius100  =  8.dp
+  val borderRadius150  = 12.dp
+  val borderRadius200  = 16.dp
+  val borderRadius300  = 24.dp
+  val borderRadiusFull = 120.dp
+
+  // --- Font sizes ---
+  val fontSizeXs  = 12.sp
+  val fontSizeSm  = 14.sp
+  val fontSizeMd  = 16.sp
+  val fontSizeLg  = 18.sp
+  val fontSizeXl  = 20.sp
+  val fontSize2xl = 24.sp
+  val fontSize3xl = 28.sp
+  val fontSize4xl = 32.sp
+
+  // --- Font weights ---
+  val fontWeightRegular  = FontWeight.W400
+  val fontWeightMedium   = FontWeight.W500
+  val fontWeightSemibold = FontWeight.W600
+  val fontWeightBold     = FontWeight.W700
+
+  // --- Elevation (use as Modifier.shadow(elevation = ...) or Card elevation) ---
+  val elevation0 =  0.dp
+  val elevation1 =  2.dp  // cards, inputs at rest
+  val elevation2 =  4.dp  // dropdowns, hovering cards
+  val elevation3 =  8.dp  // popovers, tooltips
+  val elevation4 = 16.dp  // modals, dialogs
+  val elevation5 = 24.dp
+  val elevation6 = 32.dp
+
+  // --- Animation durations (milliseconds) ---
+  const val durationFast    = 100
+  const val durationDefault = 200
+  const val durationSlow    = 300
+}
+```
+
+## File: `ui/theme/BrandSyncTheme.kt`
+
+```kotlin
+package com.yourapp.ui.theme
+
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+
+private val LightColorScheme = lightColorScheme(
+  primary           = BrandSyncTokens.colorPrimaryDefault,
+  onPrimary         = BrandSyncTokens.textOnAction,
+  primaryContainer  = BrandSyncTokens.colorPrimaryContainer,
+  onPrimaryContainer = BrandSyncTokens.textAction,
+  secondary         = BrandSyncTokens.colorPrimaryDefault,
+  onSecondary       = BrandSyncTokens.textOnAction,
+  surface           = BrandSyncTokens.surfaceBase,
+  onSurface         = BrandSyncTokens.textDefault,
+  surfaceVariant    = BrandSyncTokens.surfaceContainer,
+  onSurfaceVariant  = BrandSyncTokens.textSecondary,
+  error             = BrandSyncTokens.colorErrorDefault,
+  onError           = BrandSyncTokens.textOnAction,
+  outline           = BrandSyncTokens.borderNeutralContainer,
+  background        = BrandSyncTokens.surfaceContainer,
+  onBackground      = BrandSyncTokens.textDefault,
+)
+
+private val DarkColorScheme = darkColorScheme(
+  primary           = BrandSyncTokens.colorPrimaryDefaultDark,
+  onPrimary         = BrandSyncTokens.textOnActionDark,
+  surface           = BrandSyncTokens.surfaceBaseDark,
+  onSurface         = BrandSyncTokens.textDefaultDark,
+  surfaceVariant    = BrandSyncTokens.surfaceContainerDark,
+  onSurfaceVariant  = BrandSyncTokens.textSecondaryDark,
+  outline           = BrandSyncTokens.borderNeutralContainerDark,
+  background        = BrandSyncTokens.surfaceContainerDark,
+  onBackground      = BrandSyncTokens.textDefaultDark,
+)
+
+private val BrandSyncTypography = Typography(
+  // Display
+  displayLarge  = TextStyle(fontSize = 48.sp, fontWeight = FontWeight.W700, lineHeight = 56.sp),
+  displayMedium = TextStyle(fontSize = 32.sp, fontWeight = FontWeight.W700, lineHeight = 40.sp),
+  displaySmall  = TextStyle(fontSize = 28.sp, fontWeight = FontWeight.W600, lineHeight = 36.sp),
+  // Headline
+  headlineLarge  = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.W600, lineHeight = 32.sp),
+  headlineMedium = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.W600, lineHeight = 28.sp),
+  headlineSmall  = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.W600, lineHeight = 26.sp),
+  // Title
+  titleLarge  = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.W500, lineHeight = 26.sp),
+  titleMedium = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.W500, lineHeight = 24.sp),
+  titleSmall  = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.W500, lineHeight = 20.sp),
+  // Body
+  bodyLarge  = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.W400, lineHeight = 24.sp),
+  bodyMedium = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.W400, lineHeight = 20.sp),
+  bodySmall  = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.W400, lineHeight = 16.sp),
+  // Label
+  labelLarge  = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.W500, lineHeight = 20.sp),
+  labelMedium = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.W500, lineHeight = 16.sp),
+  labelSmall  = TextStyle(fontSize = 10.sp, fontWeight = FontWeight.W400, lineHeight = 14.sp),
+)
+
+@Composable
+fun BrandSyncTheme(
+  darkTheme: Boolean = isSystemInDarkTheme(),
+  content:   @Composable () -> Unit
+) {
+  val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+  MaterialTheme(
+    colorScheme = colorScheme,
+    typography  = BrandSyncTypography,
+    shapes      = Shapes(
+      extraSmall = RoundedCornerShape(BrandSyncTokens.borderRadius50),
+      small      = RoundedCornerShape(BrandSyncTokens.borderRadius75),
+      medium     = RoundedCornerShape(BrandSyncTokens.borderRadius100),
+      large      = RoundedCornerShape(BrandSyncTokens.borderRadius150),
+      extraLarge = RoundedCornerShape(BrandSyncTokens.borderRadius200),
+    ),
+    content     = content,
+  )
+}
+```
+
+## Dark mode — manual toggle
+
+```kotlin
+// In a ViewModel or top-level state holder
+var isDark by mutableStateOf(false)
+
+// Persist across sessions
+val prefs = context.getSharedPreferences("theme", Context.MODE_PRIVATE)
+isDark = prefs.getBoolean("dark_mode", false)
+
+// In your root composable
+BrandSyncTheme(darkTheme = isDark) {
+  // ...
+}
+
+// Toggle
+isDark = !isDark
+prefs.edit().putBoolean("dark_mode", isDark).apply()
+```
+
+## Brand color override (Jetpack Compose)
+
+If [BRAND_COLOR] is not Blue, replace every `primary-600/700/800/400/300/200/50/950`
+hex value in `BrandSyncTokens.kt` with the resolved hex for the chosen brand color scale
+(look up values in §14 Resolved Token Reference). The constant names stay the same —
+only the hex values change.
+
+Example — switching to Orange:
+
+```kotlin
+// Before (Blue default)
+val colorPrimaryDefault = Color(0xFF0062C1)  // --primary-600
+
+// After (Orange brand)
+val colorPrimaryDefault = Color(0xFFD15D21)  // --orange-600
+```
+
+Replace all affected constants:
+
+| Constant | Light token to swap | Dark token to swap |
+|---|---|---|
+| `colorPrimaryDefault` | `--[BRAND_COLOR]-600` | `--[BRAND_COLOR]-400` |
+| `colorPrimaryHover` | `--[BRAND_COLOR]-700` | `--[BRAND_COLOR]-300` |
+| `colorPrimaryPressed` | `--[BRAND_COLOR]-800` | `--[BRAND_COLOR]-200` |
+| `colorPrimaryContainer` | `--[BRAND_COLOR]-50` | `--[BRAND_COLOR]-950` |
+| `surfaceAction` | `--[BRAND_COLOR]-600` | `--[BRAND_COLOR]-400` |
+| `textAction` | `--[BRAND_COLOR]-600` | `--[BRAND_COLOR]-400` |
+| `borderPrimaryFocus` | `--[BRAND_COLOR]-600` | `--[BRAND_COLOR]-400` |
+
+Do not rename the constants. Only the hex values change.
+
+---
+
+# 12. SwiftUI Theme Engine
+
+SwiftUI cannot use CSS variables. Tokens are typed Swift constants; dark mode is handled via
+`@Environment(\.colorScheme)` or `.preferredColorScheme()`.
+
+## File: `Theme/BrandSyncTokens.swift`
+
+```swift
+import SwiftUI
+
+// ============================================================
+// BrandSync Token Bridge — SwiftUI
+// Semantic tokens only — components reference these constants.
+// Values sourced from _tokens.css resolved reference (§14).
+// ============================================================
+
+enum BrandSyncTokens {
+  // --- Surfaces (light) ---
+  static let surfaceBase       = Color(hex: "#FFFFFF")  // --static-white
+  static let surfaceContainer  = Color(hex: "#F9FAFB")  // --neutral-25
+  static let surfaceHover      = Color(hex: "#EFF0F8")  // --neutral-50
+  static let surfaceSelected   = Color(hex: "#DEE2ED")  // --neutral-100
+  static let surfaceAction     = Color(hex: "#0062C1")  // --primary-600
+  static let surfaceInverse    = Color(hex: "#21262E")  // --neutral-900
+
+  // --- Surfaces (dark) ---
+  static let surfaceBaseDark      = Color(hex: "#191C22")  // --neutral-950
+  static let surfaceContainerDark = Color(hex: "#21262E")  // --neutral-900
+  static let surfaceHoverDark     = Color(hex: "#363C47")  // --neutral-800
+  static let surfaceSelectedDark  = Color(hex: "#4D535F")  // --neutral-700
+
+  // --- Primary (light) ---
+  static let colorPrimaryDefault   = Color(hex: "#0062C1")  // --primary-600
+  static let colorPrimaryPressed   = Color(hex: "#003A78")  // --primary-800
+  static let colorPrimaryContainer = Color(hex: "#EEF0FA")  // --primary-50
+
+  // --- Primary (dark) ---
+  static let colorPrimaryDefaultDark = Color(hex: "#3E88EF")  // --primary-400
+  static let colorPrimaryPressedDark = Color(hex: "#AEC7F8")  // --primary-200
+
+  // --- Text (light) ---
+  static let textDefault   = Color(hex: "#000000")  // --static-black
+  static let textSecondary = Color(hex: "#5D6472")  // --neutral-600
+  static let textMuted     = Color(hex: "#6D7585")  // --neutral-500
+  static let textOnAction  = Color(hex: "#FFFFFF")  // --static-white
+  static let textAction    = Color(hex: "#0062C1")  // --primary-600
+  static let textDisabled  = Color(hex: "#A0A5B4")  // --neutral-300
+
+  // --- Text (dark) ---
+  static let textDefaultDark   = Color(hex: "#FFFFFF")  // --static-white
+  static let textSecondaryDark = Color(hex: "#C2C7D3")  // --neutral-200
+  static let textMutedDark     = Color(hex: "#A0A5B4")  // --neutral-300
+  static let textOnActionDark  = Color(hex: "#000000")  // --static-black
+  static let textActionDark    = Color(hex: "#3E88EF")  // --primary-400
+
+  // --- Icons (light) ---
+  static let iconDefault   = Color(hex: "#21262E")  // --neutral-900
+  static let iconSecondary = Color(hex: "#5D6472")  // --neutral-600
+  static let iconMuted     = Color(hex: "#828998")  // --neutral-400
+  static let iconAction    = Color(hex: "#0062C1")  // --primary-600 (action icon color)
+  static let iconDisabled  = Color(hex: "#A0A5B4")  // --neutral-300
+
+  // --- Icons (dark) ---
+  static let iconDefaultDark   = Color(hex: "#FFFFFF")
+  static let iconSecondaryDark = Color(hex: "#C2C7D3")  // --neutral-200
+  static let iconMutedDark     = Color(hex: "#828998")  // --neutral-400
+  static let iconActionDark    = Color(hex: "#3E88EF")  // --primary-400
+
+  // --- Status ---
+  static let colorSuccessDefault   = Color(hex: "#11714E")  // --success-600
+  static let colorSuccessContainer = Color(hex: "#C5EBD5")  // --success-100
+  static let colorWarningDefault   = Color(hex: "#805D00")  // --warning-600
+  static let colorWarningContainer = Color(hex: "#F1BD51")  // --warning-200
+  static let colorErrorDefault     = Color(hex: "#B92F31")  // --error-600
+  static let colorErrorContainer   = Color(hex: "#FFDAD7")  // --error-100
+  static let colorInfoDefault      = Color(hex: "#0066AE")  // --information-600
+  static let colorInfoContainer    = Color(hex: "#D6E3F8")  // --information-100
+  static let colorInfoActive       = Color(hex: "#003D6C")  // --information-800
+
+  // --- Status (dark) ---
+  static let colorSuccessDefaultDark = Color(hex: "#469873")  // --success-400
+  static let colorWarningDefaultDark = Color(hex: "#B18100")  // --warning-400
+  static let colorErrorDefaultDark   = Color(hex: "#EE5351")  // --error-400
+  static let colorInfoDefaultDark    = Color(hex: "#448CD6")  // --information-400
+
+  // --- Status surfaces (light) ---
+  static let surfaceSuccess  = Color(hex: "#E5F5E9")  // --success-50
+  static let surfaceWarning  = Color(hex: "#FFEFDB")  // --warning-50
+  static let surfaceError    = Color(hex: "#FCECEA")  // --error-50
+  static let surfaceInfo     = Color(hex: "#EDF0FA")  // --information-50
+  static let surfaceRaised   = Color(hex: "#FFFFFF")  // --static-white
+  static let surfaceInset    = Color(hex: "#EFF0F8")  // --neutral-50
+  static let surfaceOnAction = Color(hex: "#FBFBFB")  // --gray-25
+
+  // --- Status surfaces (dark) ---
+  static let surfaceSuccessDark  = Color(hex: "#11714E")  // --success-600
+  static let surfaceWarningDark  = Color(hex: "#805D00")  // --warning-600
+  static let surfaceErrorDark    = Color(hex: "#B92F31")  // --error-600
+  static let surfaceInfoDark     = Color(hex: "#0066AE")  // --information-600
+  static let surfaceRaisedDark   = Color(hex: "#21262E")  // --neutral-900
+  static let surfaceInsetDark    = Color(hex: "#21262E")  // --neutral-900
+  static let surfaceOnActionDark = Color(hex: "#53585C")  // --gray-900
+
+  // --- Text (status) ---
+  static let textInverse        = Color(hex: "#FFFFFF")  // --static-white
+  static let textSuccess        = Color(hex: "#1B5D43")  // --success-700
+  static let textWarning        = Color(hex: "#6B4D00")  // --warning-700
+  static let textError          = Color(hex: "#982A2A")  // --error-700
+  static let textInfo           = Color(hex: "#005592")  // --information-700
+  static let textOnSuccess      = Color(hex: "#FFFFFF")  // --static-white
+  static let textOnWarning      = Color(hex: "#332300")  // --warning-900
+  static let textOnError        = Color(hex: "#FFFFFF")  // --static-white
+  static let textOnInfo         = Color(hex: "#FFFFFF")  // --static-white
+  static let textNeutralDefault = Color(hex: "#4D535F")  // --neutral-700
+
+  // --- Text (status, dark) ---
+  static let textInverseDark        = Color(hex: "#000000")  // --static-black
+  static let textSuccessDark        = Color(hex: "#6BB491")  // --success-300
+  static let textWarningDark        = Color(hex: "#D39B00")  // --warning-300
+  static let textErrorDark          = Color(hex: "#FF807A")  // --error-300
+  static let textInfoDark           = Color(hex: "#73A9EA")  // --information-300
+  static let textOnSuccessDark      = Color(hex: "#000000")  // --static-black
+  static let textOnWarningDark      = Color(hex: "#000000")  // --static-black
+  static let textOnErrorDark        = Color(hex: "#000000")  // --static-black
+  static let textOnInfoDark         = Color(hex: "#000000")  // --static-black
+  static let textNeutralDefaultDark = Color(hex: "#A0A5B4")  // --neutral-300
+
+  // --- Neutral actions ---
+  static let colorNeutralDefault   = Color(hex: "#4D535F")  // --neutral-700
+  static let colorNeutralContainer = Color(hex: "#F9FAFB")  // --neutral-25
+
+  // --- Neutral actions (dark) ---
+  static let colorNeutralDefaultDark   = Color(hex: "#A0A5B4")  // --neutral-300
+  static let colorNeutralContainerDark = Color(hex: "#21262E")  // --neutral-900
+
+  // --- Icons (status) ---
+  static let iconInverse        = Color(hex: "#FFFFFF")  // --static-white
+  static let iconSuccess        = Color(hex: "#1B5D43")  // --success-700
+  static let iconWarning        = Color(hex: "#6B4D00")  // --warning-700
+  static let iconError          = Color(hex: "#982A2A")  // --error-700
+  static let iconInfo           = Color(hex: "#005592")  // --information-700
+  static let iconNeutralDefault = Color(hex: "#4D535F")  // --neutral-700
+
+  // --- Icons (status, dark) ---
+  static let iconInverseDark        = Color(hex: "#000000")  // --static-black
+  static let iconSuccessDark        = Color(hex: "#469873")  // --success-400
+  static let iconWarningDark        = Color(hex: "#D39B00")  // --warning-300
+  static let iconErrorDark          = Color(hex: "#FF807A")  // --error-300
+  static let iconInfoDark           = Color(hex: "#73A9EA")  // --information-300
+  static let iconNeutralDefaultDark = Color(hex: "#A0A5B4")  // --neutral-300
+
+  // --- Borders (light) ---
+  static let borderDefault          = Color(hex: "#DEE2ED")  // --neutral-100
+  static let borderNeutralContainer = Color(hex: "#C2C7D3")  // --neutral-200
+  static let borderPrimaryFocus     = Color(hex: "#0062C1")  // --primary-600
+  static let borderSuccess          = Color(hex: "#00855B")  // --success-500
+  static let borderWarning          = Color(hex: "#956D00")  // --warning-500
+  static let borderError            = Color(hex: "#982A2A")  // --error-700
+  static let borderInfo             = Color(hex: "#0078CB")  // --information-500
+
+  // --- Borders (dark) ---
+  static let borderDefaultDark          = Color(hex: "#363C47")  // --neutral-800
+  static let borderNeutralContainerDark = Color(hex: "#4D535F")  // --neutral-700
+  static let borderSuccessDark          = Color(hex: "#469873")  // --success-400
+  static let borderWarningDark          = Color(hex: "#B18100")  // --warning-400
+  static let borderErrorDark            = Color(hex: "#FF807A")  // --error-300
+  static let borderInfoDark             = Color(hex: "#448CD6")  // --information-400
+
+  // --- Spacing ---
+  static let spacing25:  CGFloat =  2
+  static let spacing50:  CGFloat =  4
+  static let spacing75:  CGFloat =  6
+  static let spacing100: CGFloat =  8
+  static let spacing150: CGFloat = 12
+  static let spacing200: CGFloat = 16
+  static let spacing250: CGFloat = 20
+  static let spacing300: CGFloat = 24
+  static let spacing350: CGFloat = 28
+  static let spacing400: CGFloat = 32
+  static let spacing500: CGFloat = 40
+  static let spacing600: CGFloat = 48
+  static let spacing800: CGFloat = 64
+
+  // --- Border Radius ---
+  static let borderRadius50:   CGFloat =  4
+  static let borderRadius75:   CGFloat =  6
+  static let borderRadius100:  CGFloat =  8
+  static let borderRadius150:  CGFloat = 12
+  static let borderRadius200:  CGFloat = 16
+  static let borderRadius300:  CGFloat = 24
+  static let borderRadiusFull: CGFloat = 120
+
+  // --- Font sizes ---
+  static let fontSizeXs:  CGFloat = 12
+  static let fontSizeSm:  CGFloat = 14
+  static let fontSizeMd:  CGFloat = 16
+  static let fontSizeLg:  CGFloat = 18
+  static let fontSizeXl:  CGFloat = 20
+  static let fontSize2xl: CGFloat = 24
+  static let fontSize3xl: CGFloat = 28
+  static let fontSize4xl: CGFloat = 32
+
+  // --- Animation ---
+  static let durationFast:    Double = 0.10
+  static let durationDefault: Double = 0.20
+  static let durationSlow:    Double = 0.30
+
+  // --- Elevation (use with .shadow() modifier) ---
+  // Each level exposes radius, x, y, and opacity for light mode.
+  // For dark mode, increase opacity (~2× light values).
+  struct ElevationLevel {
+    let radius: CGFloat
+    let x:      CGFloat
+    let y:      CGFloat
+    let opacity: Double
+  }
+  static let elevation0 = ElevationLevel(radius:  0, x: 0, y: 0, opacity: 0)
+  static let elevation1 = ElevationLevel(radius:  3, x: 0, y: 1, opacity: 0.10)  // cards at rest
+  static let elevation2 = ElevationLevel(radius:  6, x: 0, y: 2, opacity: 0.12)  // dropdowns
+  static let elevation3 = ElevationLevel(radius: 16, x: 0, y: 4, opacity: 0.16)  // popovers
+  static let elevation4 = ElevationLevel(radius: 32, x: 0, y: 8, opacity: 0.20)  // modals
+  static let elevation5 = ElevationLevel(radius: 48, x: 0, y: 16, opacity: 0.24)
+  static let elevation6 = ElevationLevel(radius: 64, x: 0, y: 32, opacity: 0.32)
+}
+
+// Required helper — add once to the project
+extension Color {
+  init(hex: String) {
+    let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+    var int = UInt64()
+    Scanner(string: hex).scanHexInt64(&int)
+    let r = Double((int >> 16) & 0xFF) / 255
+    let g = Double((int >>  8) & 0xFF) / 255
+    let b = Double( int        & 0xFF) / 255
+    self.init(red: r, green: g, blue: b)
+  }
+}
+```
+
+## File: `Theme/BrandSyncTheme.swift`
+
+```swift
+import SwiftUI
+
+// Typed token set — one instance per mode, selected at runtime
+struct BrandSyncThemeTokens {
+  let surfaceBase:            Color
+  let surfaceContainer:       Color
+  let textDefault:            Color
+  let textSecondary:          Color
+  let textMuted:              Color
+  let textOnAction:           Color
+  let textAction:             Color
+  let colorPrimary:           Color
+  let colorPrimaryPressed:    Color
+  let borderDefault:          Color
+  let borderNeutralContainer: Color
+  let iconDefault:            Color
+  let iconSecondary:          Color
+}
+
+extension BrandSyncThemeTokens {
+  static let light = BrandSyncThemeTokens(
+    surfaceBase:            BrandSyncTokens.surfaceBase,
+    surfaceContainer:       BrandSyncTokens.surfaceContainer,
+    textDefault:            BrandSyncTokens.textDefault,
+    textSecondary:          BrandSyncTokens.textSecondary,
+    textMuted:              BrandSyncTokens.textMuted,
+    textOnAction:           BrandSyncTokens.textOnAction,
+    textAction:             BrandSyncTokens.textAction,
+    colorPrimary:           BrandSyncTokens.colorPrimaryDefault,
+    colorPrimaryPressed:    BrandSyncTokens.colorPrimaryPressed,
+    borderDefault:          BrandSyncTokens.borderDefault,
+    borderNeutralContainer: BrandSyncTokens.borderNeutralContainer,
+    iconDefault:            BrandSyncTokens.iconDefault,
+    iconSecondary:          BrandSyncTokens.iconSecondary
+  )
+
+  static let dark = BrandSyncThemeTokens(
+    surfaceBase:            BrandSyncTokens.surfaceBaseDark,
+    surfaceContainer:       BrandSyncTokens.surfaceContainerDark,
+    textDefault:            BrandSyncTokens.textDefaultDark,
+    textSecondary:          BrandSyncTokens.textSecondaryDark,
+    textMuted:              BrandSyncTokens.textMutedDark,
+    textOnAction:           BrandSyncTokens.textOnActionDark,
+    textAction:             BrandSyncTokens.textActionDark,
+    colorPrimary:           BrandSyncTokens.colorPrimaryDefaultDark,
+    colorPrimaryPressed:    BrandSyncTokens.colorPrimaryPressedDark,
+    borderDefault:          BrandSyncTokens.borderDefaultDark,
+    borderNeutralContainer: BrandSyncTokens.borderNeutralContainerDark,
+    iconDefault:            BrandSyncTokens.iconDefaultDark,
+    iconSecondary:          BrandSyncTokens.iconSecondaryDark
+  )
+}
+
+private struct BrandSyncThemeKey: EnvironmentKey {
+  static let defaultValue = BrandSyncThemeTokens.light
+}
+
+extension EnvironmentValues {
+  var brandSync: BrandSyncThemeTokens {
+    get { self[BrandSyncThemeKey.self] }
+    set { self[BrandSyncThemeKey.self] = newValue }
+  }
+}
+
+struct BrandSyncTheme<Content: View>: View {
+  @Environment(\.colorScheme) private var colorScheme
+  let content: Content
+
+  init(@ViewBuilder content: () -> Content) {
+    self.content = content()
+  }
+
+  var body: some View {
+    content
+      .environment(\.brandSync, colorScheme == .dark ? .dark : .light)
+  }
+}
+```
+
+## Usage in components
+
+```swift
+// App entry point
+@main
+struct MyApp: App {
+  var body: some Scene {
+    WindowGroup {
+      BrandSyncTheme {
+        ContentView()
+      }
+    }
+  }
+}
+
+// In any view
+struct ContactCard: View {
+  @Environment(\.brandSync) private var tokens
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: BrandSyncTokens.spacing150) {
+      Text("Name")
+        .foregroundColor(tokens.textDefault)
+      Text("Role")
+        .foregroundColor(tokens.textSecondary)
+    }
+    .padding(BrandSyncTokens.spacing200)
+    .background(tokens.surfaceBase)
+    .cornerRadius(BrandSyncTokens.borderRadius150)
+    .overlay(
+      RoundedRectangle(cornerRadius: BrandSyncTokens.borderRadius150)
+        .stroke(tokens.borderDefault, lineWidth: 1)
+    )
+  }
+}
+```
+
+## Dark mode — manual override (persisted)
+
+```swift
+// Persist the user's preference
+@AppStorage("colorScheme") private var colorSchemeRaw: String = "system"
+
+var preferredColorScheme: ColorScheme? {
+  switch colorSchemeRaw {
+  case "dark":  return .dark
+  case "light": return .light
+  default:      return nil  // follows system
+  }
+}
+
+// Apply at root — BrandSyncTheme reads colorScheme automatically
+ContentView()
+  .preferredColorScheme(preferredColorScheme)
+```
+
+## Brand color override (SwiftUI)
+
+If [BRAND_COLOR] is not Blue, replace every `primary-600/700/800/400/300/200/50/950`
+hex string in `BrandSyncTokens.swift` with the resolved hex for the chosen brand color scale
+(look up values in §14 Resolved Token Reference). The constant names stay the same —
+only the hex strings change.
+
+Example — switching to Orange:
+
+```swift
+// Before (Blue default)
+static let colorPrimaryDefault = Color(hex: "#0062C1")  // --primary-600
+
+// After (Orange brand)
+static let colorPrimaryDefault = Color(hex: "#D15D21")  // --orange-600
+```
+
+Replace all affected constants:
+
+| Constant | Light token to swap | Dark token to swap |
+|---|---|---|
+| `colorPrimaryDefault` | `--[BRAND_COLOR]-600` | `--[BRAND_COLOR]-400` |
+| `colorPrimaryPressed` | `--[BRAND_COLOR]-800` | `--[BRAND_COLOR]-200` |
+| `colorPrimaryContainer` | `--[BRAND_COLOR]-50` | `--[BRAND_COLOR]-950` |
+| `surfaceAction` | `--[BRAND_COLOR]-600` | `--[BRAND_COLOR]-400` |
+| `textAction` | `--[BRAND_COLOR]-600` | `--[BRAND_COLOR]-400` |
+| `borderPrimaryFocus` | `--[BRAND_COLOR]-600` | `--[BRAND_COLOR]-400` |
+
+Do not rename the constants. Only the hex strings change.
+
+## Elevation usage (SwiftUI)
+
+```swift
+let e = BrandSyncTokens.elevation2
+someView
+  .shadow(
+    color:  Color.black.opacity(e.opacity),
+    radius: e.radius,
+    x:      e.x,
+    y:      e.y,
+  )
+```
+
+---
+
+# 13. Dark Mode
 
 | Framework | Mechanism | Token switching |
 |-----------|-----------|-----------------|
@@ -1114,6 +2040,8 @@ export function useThemeTokens() {
 | Angular | Same as React | Automatic via CSS vars |
 | React + MUI | `data-theme` attribute only — no second MUI theme | Automatic via CSS vars |
 | Flutter | `ThemeMode.dark` → `AppTheme.dark` | `*Dark` constant variants |
+| Jetpack Compose | `isSystemInDarkTheme()` or manual `isDark` state | `Dark`/`Light` `ColorScheme` via `BrandSyncTheme` |
+| SwiftUI | `@Environment(\.colorScheme)` via `BrandSyncTheme` wrapper | `.dark` / `.light` `BrandSyncThemeTokens` instance |
 | React Native | `useColorScheme()` hook | `useThemeTokens()` composable |
 | Tailwind | `darkMode: ['attribute', '[data-theme="dark"]']` | Automatic via CSS vars |
 
@@ -1124,10 +2052,10 @@ export function useThemeTokens() {
 
 ---
 
-# 12. Resolved Token Reference
+# 14. Resolved Token Reference
 
-Use these flattened values only where CSS variables cannot be used (Flutter, React Native,
-MAUI, MUI palette, Angular Material SCSS palette). Everywhere else use semantic token names.
+Use these flattened values only where CSS variables cannot be used (Flutter, Jetpack Compose,
+SwiftUI, React Native, MAUI, MUI palette, Angular Material SCSS palette). Everywhere else use semantic token names.
 
 ## Spacing → px
 
@@ -1256,7 +2184,7 @@ elevation-6 : 0 16px 48px rgba(0,0,0,0.48), 0 32px 64px rgba(0,0,0,0.64)
 
 ---
 
-# 13. BrandSync Token Reference
+# 15. BrandSync Token Reference
 
 Always use semantic tokens in component code. Never reference Layer 1 primitives.
 
@@ -1353,7 +2281,7 @@ var(--opacity-disabled) /* 0.5 — disabled state */
 
 ---
 
-# 14. Validation Checklist
+# 16. Validation Checklist
 
 Before delivery:
 
@@ -1369,13 +2297,134 @@ Before delivery:
 - [ ] Dark mode implemented via the framework-appropriate mechanism
 - [ ] Dark mode persists across sessions (localStorage for web, SharedPreferences for Flutter)
 - [ ] Web-only tokens (hover, focus, transitions, grid) omitted from mobile token bridges
-- [ ] Elevation/shadow values use the resolved reference from §12 on mobile platforms
+- [ ] Elevation/shadow values use the resolved reference from §14 on mobile platforms
 - [ ] Animation durations mapped to platform animation API (not CSS transitions) on mobile
+- [ ] All icons use Phosphor Icons — no substitution with Lucide, Heroicons, Font Awesome, or other libraries
+- [ ] Icon colors applied via BrandSync icon semantic tokens (`--icon-default`, `--icon-action`, etc.) — no hardcoded color values
+- [ ] Jetpack Compose and SwiftUI: Phosphor Icons not used — icon library choice is left to the project
 
 ---
 
-Version: 1.1
-Stack: Framework-agnostic (React, Vue, Angular, Flutter, React Native, Tailwind)
+# 17. Icon Library — Phosphor Icons
+
+BrandSync designs use Phosphor Icons exclusively. When generating any component that includes icons,
+always install and use the official Phosphor package for the target framework. Never substitute
+Lucide, Heroicons, Font Awesome, Material Icons, or any other icon library — even if one is
+already installed in the project.
+
+## Package by framework
+
+| Platform             | Package                       | Install command                        |
+|----------------------|-------------------------------|----------------------------------------|
+| React                | `@phosphor-icons/react`       | `npm i @phosphor-icons/react`          |
+| Vue 3                | `@phosphor-icons/vue`         | `npm i @phosphor-icons/vue`            |
+| Angular              | `@phosphor-icons/webcomponents` | `npm i @phosphor-icons/webcomponents` |
+| Tailwind / plain web | `@phosphor-icons/web`         | `npm i @phosphor-icons/web`            |
+| Flutter              | `phosphor_flutter`            | `flutter pub add phosphor_flutter`     |
+| Jetpack Compose      | Not applicable — omit Phosphor for native Android | — |
+| SwiftUI              | Not applicable — omit Phosphor for native iOS/macOS | — |
+| React Native         | `phosphor-react-native`       | `npm i phosphor-react-native`          |
+| .NET MAUI            | No official package — use inline SVG from phosphoricons.com | —        |
+
+## Usage examples
+
+**React:**
+```tsx
+import { House, MagnifyingGlass, ArrowRight } from '@phosphor-icons/react';
+
+<House />                   {/* default weight: regular */}
+<House weight="fill" />
+<House weight="duotone" />
+```
+
+**Vue 3:**
+```vue
+<script setup>
+import { PhHouse } from '@phosphor-icons/vue';
+</script>
+<template>
+  <PhHouse />
+  <PhHouse weight="fill" />
+</template>
+```
+
+**Angular (add `CUSTOM_ELEMENTS_SCHEMA` to the module/standalone component):**
+```ts
+// main.ts
+import '@phosphor-icons/webcomponents';
+```
+```html
+<ph-house></ph-house>
+<ph-house weight="fill"></ph-house>
+```
+
+**Flutter:**
+```dart
+import 'package:phosphor_flutter/phosphor_flutter.dart';
+
+Icon(PhosphorIconsRegular.house)
+Icon(PhosphorIconsFill.house)
+```
+
+**React Native:**
+```tsx
+import { House } from 'phosphor-react-native';
+
+<House />
+<House weight="fill" />
+```
+
+## Icon weights
+
+Use `regular` as the default unless the design specifies otherwise.
+
+| Weight    | When to use                              |
+|-----------|------------------------------------------|
+| `thin`    | Decorative / large display icons         |
+| `light`   | Supporting / secondary icons             |
+| `regular` | Default — body and UI icons              |
+| `bold`    | Emphasis, alerts, CTAs                   |
+| `fill`    | Selected state, active state             |
+| `duotone` | Illustrations, feature graphics          |
+
+## Coloring icons with BrandSync tokens
+
+Always apply icon color via a BrandSync semantic token. Never hardcode a color value on an icon.
+
+**Web (React / Vue / Angular):**
+```tsx
+// Correct
+<House style={{ color: 'var(--icon-default)' }} />
+<House style={{ color: 'var(--icon-action)' }} />
+
+// Wrong — hardcoded
+<House color="#21262E" />
+```
+
+**Flutter:**
+```dart
+Icon(PhosphorIconsRegular.house, color: BrandSyncTokens.iconDefault)
+```
+
+**React Native:**
+```tsx
+<House color={tokens.iconDefault} />
+```
+
+Available icon semantic tokens:
+
+| Token              | Use                                    |
+|--------------------|----------------------------------------|
+| `--icon-default`   | Standard UI icons                      |
+| `--icon-secondary` | Supporting / lower-priority icons      |
+| `--icon-muted`     | Subtle, decorative icons               |
+| `--icon-action`    | Icons on primary action elements       |
+| `--icon-disabled`  | Disabled state                         |
+
+---
+
+Version: 1.3
+Stack: Framework-agnostic (React, Vue, Angular, Flutter, Jetpack Compose, SwiftUI, React Native, Tailwind)
 Mode: Token Bridge First
 Authority: BrandSync Design System (`_tokens.css`)
 Violation Policy: Fail Hard — never generate hardcoded values

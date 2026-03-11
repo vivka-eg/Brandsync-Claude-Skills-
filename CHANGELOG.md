@@ -5,6 +5,76 @@ Format: `## v[version] - [date]` with sections per skill file.
 
 ---
 
+## v0.2.2 - 2026-03-11
+
+### skills/foundations/ (all 9 files)
+- Step 2 updated for web platforms (`web`, `react-material`, `angular-material`, `vue`, `tailwind`): replaced MCP `get_tokens` call with `npm install brandsync-tokens`; brand color override block retained
+- Step 2 updated for mobile platforms (`flutter`, `react-native`, `jetpack-compose`, `swiftui`): reframed as "inspect token values for native code generation"; added explicit rule — do not copy `_tokens.css` into a mobile project
+- Step 4 updated for web files: check changed from `_tokens.css` imported → `brandsync-tokens` installed and imported
+
+---
+
+## v0.2.0 - 2026-03-09 (npm)
+
+### npm package: brandsync-skills
+- Published `brandsync-skills` npm package — skill files now installable via `npx brandsync-skills <skill-name>`
+- CLI saves skill to `~/.claude/skills/` on install
+
+### skills/foundations/ (new directory)
+- Split `brandsync-foundations.md` into 9 platform-specific files under `skills/foundations/`
+- Each file contains shared sections (§0 Pre-Flight, §1–3, §13–17) plus the platform-specific section
+- `web.md` — §4 Web Output (CSS variables)
+- `react-material.md` — §5 React + MUI
+- `angular-material.md` — §6 Angular Material
+- `vue.md` — §7 Vue 3
+- `tailwind.md` — §8 Tailwind CSS
+- `flutter.md` — §9 Flutter
+- `react-native.md` — §10 React Native
+- `jetpack-compose.md` — §11 Jetpack Compose
+- `swiftui.md` — §12 SwiftUI
+
+---
+
+## v0.14.3 - 2026-03-02
+
+### skills/vue.md
+- Fixed §4 Icon Protocol: replaced `lucide-vue-next` with `@phosphor-icons/vue`; updated named import example (`PhMagnifyingGlass`, `PhBell`, `PhPlus`); added `weight` prop examples; added install step; added explicit prohibition on `lucide-vue-next`, `data-lucide`, and `createIcons()`
+- Updated SFC structure template (§2): import example updated to `@phosphor-icons/vue`
+- Updated layout example (§7): nav icon updated from `<SearchIcon>` to `<PhMagnifyingGlass>`
+- Updated DO/DON'T rules (§13) and Validation Checklist (§15) to reference `@phosphor-icons/vue`
+- Updated stack footer
+- Version bumped to 1.4
+
+### skills/angular-vanilla-ui.md
+- Fixed §8 Icon Protocol: replaced Lucide CDN + `createIcons()` pattern with `@phosphor-icons/webcomponents` npm package; added install + `main.ts` import + `CUSTOM_ELEMENTS_SCHEMA` instructions; replaced `data-lucide` template pattern with `<ph-*>` web component elements; removed DOM-mutation re-initialization requirement (Phosphor web components self-register)
+- Fixed §7 Mandatory Angular Component Pattern: both Angular 17+ and Angular <17 examples updated — removed `AfterViewInit` + `initializeIcons()`, replaced with `OnInit` + `CUSTOM_ELEMENTS_SCHEMA` in decorator; theme init moved to `ngOnInit()`
+- Fixed §6 Hard Constraints: replaced Lucide CDN and `ngAfterViewInit` icon init bullets with Phosphor webcomponents and `CUSTOM_ELEMENTS_SCHEMA` bullets
+- Updated Validation Checklist (§13): replaced Lucide CDN and `createIcons()` items with Phosphor install, schema, and no-CDN items
+- Version bumped to 7.2
+
+### skills/angular-material-ui.md
+- Fixed §10 Icon Strategy: removed two-option Lucide/Material Icons pattern; replaced with single required `@phosphor-icons/webcomponents` implementation including install, `main.ts` import, `CUSTOM_ELEMENTS_SCHEMA`, and `<ph-*>` template usage
+- Fixed §5 Component Pattern: removed `AfterViewInit` + `initializeIcons()` + Lucide `createIcons()`; replaced with `OnInit` + `CUSTOM_ELEMENTS_SCHEMA` in decorator; theme init moved to `ngOnInit()`
+- Fixed §6 Template Translation: updated canonical and Material adaptation examples from `<i data-lucide="plus">` to `<ph-plus>`; updated change notes
+- Updated Validation Checklist (§14): replaced Lucide/Material icon strategy item with Phosphor enforcement + `CUSTOM_ELEMENTS_SCHEMA` items
+- Version bumped to 1.4
+
+---
+
+## v0.14.2 - 2026-03-02
+
+### skills/brandsync-foundations.md
+- Added §15 Icon Library — Phosphor Icons: per-framework package table, usage examples (React, Vue, Angular, Flutter, React Native), icon weights table, BrandSync semantic token coloring rules
+- Added §0 Step 5: Install Phosphor Icons — mandatory pre-flight step to check and install the correct Phosphor package before writing any component code; includes Angular `CUSTOM_ELEMENTS_SCHEMA` note for both standalone and NgModule projects; .NET MAUI documented as no-package (inline SVG fallback)
+- Added §2 Core Law rule #7: never use Lucide, Heroicons, Font Awesome, Material Icons, or any other icon library — always use Phosphor Icons
+- Added two checklist items to §14 Validation Checklist: Phosphor-only enforcement and BrandSync icon semantic token coloring
+- Version bumped to 1.2
+
+### skills/flutter.md
+- Fixed §10 Icon Protocol: replaced `lucide_flutter` (Options A/B pattern) with `phosphor_flutter` as the single required icon package, aligned to the cross-skill Phosphor Icons standard; updated usage examples to `PhosphorIcon` / `PhosphorIcons.*` API with weight variants
+
+---
+
 ## v0.14.1 - 2026-02-25
 
 ### skills/brandsync-foundations.md
