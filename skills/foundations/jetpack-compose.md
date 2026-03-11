@@ -14,7 +14,7 @@ into the native construct the target framework understands.
 
 | Aspect            | Approach                                                           |
 |-------------------|--------------------------------------------------------------------|
-| Token Source      | `_tokens.css` — fetched from MCP, two-layer architecture          |
+| Token Source      | `brandsync-tokens` npm package, two-layer architecture          |
 | Output            | Framework-native theme file(s) — not generic CSS                  |
 | Dark Mode         | Token-driven via `data-theme` attribute (web) or ThemeMode (native)|
 | Philosophy        | "Generate the bridge once, reference tokens everywhere after"      |
@@ -125,7 +125,7 @@ Verify the response contains all required layers:
 - `--elevation-0` through `--elevation-6`
 - `--transition-color`, `--transition-bg`, `--transition-interactive`
 
-If any semantic tokens are missing, replace `_tokens.css` with the full canonical version.
+If any semantic tokens are missing, update `brandsync-tokens` to the latest version: `npm install brandsync-tokens@latest`.
 Undefined CSS variables fail silently — they resolve to empty and break layout without errors.
 
 **Brand color override:** If [BRAND_COLOR] is not Blue, add a CSS override block at the bottom
@@ -200,7 +200,7 @@ If the user's stated platform and detected framework conflict, ask before procee
 
 Before generating, check if a theme bridge already exists:
 
-- Web: Is `_tokens.css` already imported globally?
+- Web: Is `brandsync-tokens` installed (`package.json`) and imported globally?
 - React/MUI: Is `ThemeProvider` already configured?
 - Flutter: Does `lib/tokens/brandsync_tokens.dart` exist?
 - React Native: Does `src/tokens/BrandSyncTokens.ts` exist?
@@ -343,7 +343,7 @@ import androidx.compose.ui.text.font.FontWeight
 // ============================================================
 // BrandSync Token Bridge — Jetpack Compose
 // Semantic tokens only — components reference these constants.
-// Values sourced from _tokens.css resolved reference (§14).
+// Values sourced from brandsync-tokens resolved reference (§14).
 // ============================================================
 
 object BrandSyncTokens {
@@ -713,7 +713,7 @@ Do not rename the constants. Only the hex values change.
 **Never:**
 - Rebuild a theme object dynamically for dark mode on web
 - Use `prefers-color-scheme` media query alone — always support manual toggle
-- Invent dark-mode color values — use only tokens from the dark block in `_tokens.css`
+- Invent dark-mode color values — use only tokens from the dark block in the `brandsync-tokens` source
 
 ---
 
@@ -953,7 +953,7 @@ Before delivery:
 - [ ] User confirmed brand color — one of the 14 BrandSync brand color names
 - [ ] User confirmed target platform — theme generated for the correct framework
 - [ ] Brand color override block added to `_tokens.css` / `_brand.css` (web) or resolved hex values used in token bridge (mobile)
-- [ ] `_tokens.css` fetched from MCP and verified — all semantic token groups present
+- [ ] `brandsync-tokens` installed — run `npm install brandsync-tokens` if missing
 - [ ] Token bridge file created at the correct path for the framework
 - [ ] No hardcoded hex values, px values, or raw numbers in component code
 - [ ] No Layer 1 primitive tokens referenced in component code
@@ -1091,5 +1091,5 @@ Available icon semantic tokens:
 Version: 1.3
 Stack: Framework-agnostic (React, Vue, Angular, Flutter, Jetpack Compose, SwiftUI, React Native, Tailwind)
 Mode: Token Bridge First
-Authority: BrandSync Design System (`_tokens.css`)
+Authority: BrandSync Design System (`brandsync-tokens`)
 Violation Policy: Fail Hard — never generate hardcoded values

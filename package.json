@@ -1,6 +1,6 @@
 {
   "name": "brandsync-skills",
-  "version": "0.2.2",
+  "version": "0.2.8",
   "description": "BrandSync framework skill rules for Claude",
   "bin": {
     "brandsync-skills": "bin/index.js"

@@ -14,7 +14,7 @@ into the native construct the target framework understands.
 
 | Aspect            | Approach                                                           |
 |-------------------|--------------------------------------------------------------------|
-| Token Source      | `_tokens.css` — fetched from MCP, two-layer architecture          |
+| Token Source      | `brandsync-tokens` npm package, two-layer architecture          |
 | Output            | Framework-native theme file(s) — not generic CSS                  |
 | Dark Mode         | Token-driven via `data-theme` attribute (web) or ThemeMode (native)|
 | Philosophy        | "Generate the bridge once, reference tokens everywhere after"      |
@@ -382,7 +382,7 @@ html {
 
 ```scss
 // 1. BrandSync tokens (must be first — Material can reference them)
-@import 'assets/_tokens.css';
+@import 'brandsync-tokens/tokens.css';
 // 2. Angular Material theme
 @import 'material-theme';
 // 3. Global overrides
@@ -407,7 +407,7 @@ html {
 **Never:**
 - Rebuild a theme object dynamically for dark mode on web
 - Use `prefers-color-scheme` media query alone — always support manual toggle
-- Invent dark-mode color values — use only tokens from the dark block in `_tokens.css`
+- Invent dark-mode color values — use only tokens from the dark block in the `brandsync-tokens` source
 
 ---
 
@@ -647,7 +647,7 @@ Before delivery:
 - [ ] User confirmed brand color — one of the 14 BrandSync brand color names
 - [ ] User confirmed target platform — theme generated for the correct framework
 - [ ] Brand color override block added to `_tokens.css` / `_brand.css` (web) or resolved hex values used in token bridge (mobile)
-- [ ] `_tokens.css` fetched from MCP and verified — all semantic token groups present
+- [ ] `brandsync-tokens` installed — run `npm install brandsync-tokens` if missing
 - [ ] Token bridge file created at the correct path for the framework
 - [ ] No hardcoded hex values, px values, or raw numbers in component code
 - [ ] No Layer 1 primitive tokens referenced in component code
@@ -785,5 +785,5 @@ Available icon semantic tokens:
 Version: 1.3
 Stack: Framework-agnostic (React, Vue, Angular, Flutter, Jetpack Compose, SwiftUI, React Native, Tailwind)
 Mode: Token Bridge First
-Authority: BrandSync Design System (`_tokens.css`)
+Authority: BrandSync Design System (`brandsync-tokens`)
 Violation Policy: Fail Hard — never generate hardcoded values

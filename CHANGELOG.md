@@ -5,6 +5,35 @@ Format: `## v[version] - [date]` with sections per skill file.
 
 ---
 
+## v0.2.6 - 2026-03-11
+
+### skills/brandsync-foundations.md
+- Deprecated and removed — replaced by the 9 platform-specific files in `skills/foundations/`
+
+---
+
+## v0.2.5 - 2026-03-11
+
+### skills/foundations/ (all 9 files)
+- Removed all `_tokens.css` local file references from platform-specific code examples
+- Web files: updated all import statements to `import 'brandsync-tokens/tokens.css'`
+- Angular: updated `angular.json` styles array entry to `brandsync-tokens/tokens.css`; SCSS `@import` updated
+- Plain HTML: updated `<link>` href to `node_modules/brandsync-tokens/tokens.css`
+- Mobile files: updated "missing tokens" instruction from "replace `_tokens.css`" to `npm install brandsync-tokens@latest`
+- Intro table: updated Token Source from `_tokens.css — fetched from MCP` → `brandsync-tokens npm package`
+- Code comments: updated `_tokens.css resolved reference` → `brandsync-tokens resolved reference`
+- Authority line: updated to reference `brandsync-tokens` across all files
+
+---
+
+## v0.2.3 - 2026-03-11
+
+### skills/foundations/ (all 9 files)
+- Step 4 updated across all files: web check changed from `_tokens.css` already imported → `brandsync-tokens` installed and imported
+- Validation checklist updated: replaced `_tokens.css` fetched from MCP item → `brandsync-tokens` installed item
+
+---
+
 ## v0.2.2 - 2026-03-11
 
 ### skills/foundations/ (all 9 files)
